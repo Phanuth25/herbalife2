@@ -1,0 +1,106 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+../../.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Custom lib folders to ignore (except herbalife)
+lib/data/
+lib/public/
+lib/widget/
+lib/contant/
+lib/project/
+lib/youtube/
+lib/exercise/
+lib/self_learning/
+lib/assignment/
+lib/assignment2/
+lib/assignment2.zip
+# Files directly inside lib to ignore
+lib/main.dart
+lib/youtube.dart
+lib/Ins_figma.dart
+lib/back_figma.dart
+lib/hand_figma.dart
+lib/Home_figma.dart
+lib/about_figma.dart
+lib/bicep_figma.dart
+lib/login_figma.dart
+lib/member_figma.dart
+lib/tricep_figma.dart
+lib/auth_provider.dart
+lib/feature_figma.dart
+lib/profile_figma.dart
+lib/trainer_figma.dart
+lib/shoulder_figma.dart
+lib/language_provider.dart
+
+
+.env
+lib/herbalife/private/.env
+lib/herbalife/node_modules/
+node_modules/
+# Unrelated projects and files
+lib/homework/
+private/node_modules
+flutter_01.png
+flutter_02.png
+flutter_03.png
+lib/herbalife/note.txt
+
+
+README_QUIZ.md
+# Unrelated assets
+assets/lotties/
+assets/rive/
+assets/images/gym.png
+assets/images/gym2.png
+assets/images/gym3.jpg
+assets/images/gym4.jpg
+assets/images/gym5.jpg
+assets/images/abs.png
+assets/images/back.png
+assets/images/chest.png
+assets/images/muscle.png
+assets/images/trainer.png
+

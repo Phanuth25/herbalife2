@@ -1,11 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+// Use 127.0.0.1 for Web to avoid IPv6 issues, and 10.0.2.2 for Android Emulator
+final String accounturl = kIsWeb ? "http://127.0.0.1:3000/api" : "http://10.0.2.2:3000/api";
 
-const String accounturl = "http://10.0.2.2:3000/api";
-// Colors
 const Color kPrimaryGreen = Color(0xFF2E6A38);
 
-// Text Styles
 const TextStyle kTitleStyle = TextStyle(
   color: kPrimaryGreen,
   fontWeight: FontWeight.bold,
@@ -16,7 +16,6 @@ const TextStyle kHintStyle = TextStyle(
   fontWeight: FontWeight.bold,
 );
 
-// TextField Decoration Builder
 InputDecoration kTextFieldDecoration({required String hintText}) {
   return InputDecoration(
     hintText: hintText,
@@ -32,7 +31,6 @@ InputDecoration kTextFieldDecoration({required String hintText}) {
   );
 }
 
-// Button Style
 final ButtonStyle kButtonStyle = ElevatedButton.styleFrom(
   backgroundColor: kPrimaryGreen,
   foregroundColor: Colors.white,
@@ -44,9 +42,7 @@ final ButtonStyle kButtonStyle = ElevatedButton.styleFrom(
 
 class LoginContainer extends StatelessWidget {
   final Widget child;
-
   const LoginContainer({super.key, required this.child});
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -63,32 +59,18 @@ class LoginContainer extends StatelessWidget {
   }
 }
 
-// 3. LoginButton
 class LoginButton extends StatelessWidget {
   final String label;
   final bool isLoading;
   final VoidCallback? onPressed;
   final TextStyle? textStyle;
-
-  const LoginButton({
-    super.key,
-    required this.label,
-    required this.isLoading,
-    required this.onPressed,
-    this.textStyle,
-  });
-
+  const LoginButton({super.key, required this.label, required this.isLoading, required this.onPressed, this.textStyle});
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: kButtonStyle,
       onPressed: isLoading ? null : onPressed,
-      child: isLoading
-          ? const CircularProgressIndicator(color: Colors.white)
-          : Text(
-        label,
-        style: textStyle ?? kTitleStyle.copyWith(color: Colors.white),
-      ),
+      child: isLoading ? const CircularProgressIndicator(color: Colors.white) : Text(label, style: textStyle ?? kTitleStyle.copyWith(color: Colors.white)),
     );
   }
 }
@@ -99,28 +81,16 @@ class LoginTextField extends StatelessWidget {
   final bool obscureText;
   final TextStyle? textStyle;
   final IconData icon;
-  const LoginTextField({
-    super.key,
-    required this.controller,
-    required this.hintText,
-    this.obscureText = false,
-    this.textStyle,
-    required this.icon,
-
-  });
-
+  const LoginTextField({super.key, required this.controller, required this.hintText, this.obscureText = false, this.textStyle, required this.icon});
   @override
   Widget build(BuildContext context) {
-
     return SizedBox(
       width: 280,
       child: TextField(
         controller: controller,
         obscureText: obscureText,
         style: textStyle ?? kTitleStyle,
-        decoration: kTextFieldDecoration(hintText: hintText).copyWith(
-          prefixIcon: Icon(icon, color: kPrimaryGreen),
-        ),
+        decoration: kTextFieldDecoration(hintText: hintText).copyWith(prefixIcon: Icon(icon, color: kPrimaryGreen)),
       ),
     );
   }

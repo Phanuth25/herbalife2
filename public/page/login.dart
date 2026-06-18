@@ -315,51 +315,17 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                                                       null) {
                                                     if (authProvider.message ==
                                                         "Login successful") {
-                                                      // Save critical data to Secure Storage
-                                                      await dataProvider
-                                                          .writeSecureData(
-                                                            'id',
-                                                            authProvider.id!,
-                                                          );
-                                                      await dataProvider
-                                                          .writeSecureData(
-                                                            'userId',
-                                                            authProvider
-                                                                .userId!,
-                                                          );
-                                                      await dataProvider
-                                                          .writeSecureData(
-                                                            'token',
-                                                            authProvider
-                                                                .userToken!,
-                                                          );
-                                                      await dataProvider
-                                                          .writeSecureData(
-                                                            'refreshToken',
-                                                            authProvider
-                                                                .refreshToken!,
-                                                          );
-                                                      await dataProvider
-                                                          .writeSecureData(
-                                                            'password',
-                                                            _passwordController
-                                                                .text,
-                                                          );
+                                                      // 1. Force string conversion for storage to prevent type errors
+                                                      await dataProvider.writeSecureData('userId', authProvider.infoId!);
+                                                      await dataProvider.writeSecureData('token', authProvider.userToken!);
+                                                      await dataProvider.writeSecureData('refreshToken', authProvider.refreshToken!);
+                                                      await dataProvider.writeSecureData('password', _passwordController.text);
 
-                                                      // Update global ValueNotifiers
-                                                      isId.value =
-                                                          authProvider.id!;
-                                                      isUser.value =
-                                                          authProvider.userId!;
-
+                                                      if (!mounted) return;
                                                       Navigator.push(
                                                         context,
                                                         MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              Info(
-                                                                authProvider
-                                                                    .userId,
-                                                              ),
+                                                          builder: (context) => Info(authProvider.userId),
                                                         ),
                                                       );
                                                     } else {

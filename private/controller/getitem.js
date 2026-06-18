@@ -5,7 +5,6 @@ const db = require('../model/db');
 router.get('/getitem/:id', (req, res) => {
     const userId = req.params.id;
 
-    // Check if the columns match exactly with your database table 'infos'
     const sql = `
             SELECT
                 inv.id,
@@ -26,22 +25,11 @@ router.get('/getitem/:id', (req, res) => {
             return res.status(500).json({ error: err.message });
         }
 
-        console.log("Database results for ID " + userId + ":", results);
-
-        if (results.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "User record not found in database"
-            });
-        }
-
-        const info = results;
-
-        // We use || null to ensure we don't send 'undefined'
+        // Fix: Return 200 even if results are empty (empty cart is not an error)
         res.status(200).json({
             success: true,
-            message: "Cart loaded",
-            data: info
+            message: results.length > 0 ? "Cart loaded" : "Cart is empty",
+            data: results
         });
     });
 });

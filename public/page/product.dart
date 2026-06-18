@@ -4,6 +4,7 @@ import 'package:project2/herbalife/public/model/product_model.dart';
 import 'package:project2/herbalife/public/page/info.dart';
 import 'package:project2/herbalife/public/provider/auth_provider.dart';
 import 'package:project2/herbalife/public/provider/cart_provider.dart';
+import 'package:project2/herbalife/public/provider/profile_provider.dart';
 import 'package:project2/herbalife/public/widget/item.dart';
 import 'package:project2/herbalife/public/page/cart.dart';
 import 'package:provider/provider.dart';
@@ -29,7 +30,11 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    context.read<CartProvider>().fetchCartItems();
+    // Fetch profile and cart items on load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileProvider>().getProfile();
+      context.read<CartProvider>().fetchCartItems();
+    });
   }
 
   @override
@@ -42,14 +47,13 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final authProvider = context.watch<Authprovider>();
     final cartProvider = context.watch<CartProvider>();
-    final double totalPoint = cartProvider.cartItems.fold(
-      0,
-      (sum, item) => sum + double.parse(item.point),
-    );
+    
+    final double totalPoint = cartProvider.totalPoints;
     final int totalQty = cartProvider.cartItems.fold(
       0,
       (sum, item) => sum + item.quantity,
     );
+    
     final filteredProducts = products
         .where(
           (product) =>
@@ -148,7 +152,6 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              //here
                               builder: (context) => Info(authProvider.userId),
                             ),
                           );
@@ -322,7 +325,6 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
                                     ),
                                     alignment: Alignment.center,
                                     child: Text(
-                                      //here
                                       '$totalQty',
                                       style: const TextStyle(
                                         color: Color(0xFF2E7D32),
@@ -349,7 +351,7 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
                                 ),
                               ),
                               Text(
-                                "Points:$totalPoint",
+                                "Points:${totalPoint.toStringAsFixed(2)}",
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
@@ -570,7 +572,7 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
             child: ListBody(
               children: <Widget>[
                 Text('Your selected products will remain in your cart even if you close the app.'),
-                SizedBox(height: 10), // Added for better spacing
+                SizedBox(height: 10),
                 Text('To remove any items, please go to your Cart page and tap the trash icon.'),
               ],
             ),

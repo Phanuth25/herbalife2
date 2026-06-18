@@ -7,15 +7,12 @@ class DioClient {
     BaseOptions(
       baseUrl: accounturl,
       contentType: 'application/json',
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
     ),
-  );
-
-  static Dio get instance {
-    _dio.interceptors.clear();
-    _dio.interceptors.add(
+  )..interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Automatically attach access token to every request
           final storage = SecureStorageProvider();
           final token = await storage.readSecureData('token');
           if (token != null) {
@@ -24,33 +21,30 @@ class DioClient {
           return handler.next(options);
         },
         onError: (error, handler) async {
-          // If 401 — token expired, try to refresh
           if (error.response?.statusCode == 401) {
             final storage = SecureStorageProvider();
-            final refreshToken = await storage.readSecureData('refreshToken');
+            // Check both common naming conventions
+            String? refreshToken = await storage.readSecureData('refreshToken') ?? 
+                                 await storage.readSecureData('refreshtoken');
 
             if (refreshToken != null) {
               try {
-                // Call refresh endpoint
-                final refreshDio = Dio(); // separate dio to avoid infinite loop
+                final refreshDio = Dio(); 
                 final response = await refreshDio.post(
                   '$accounturl/refresh',
                   data: {'token': refreshToken},
                 );
 
                 if (response.statusCode == 200) {
-                  final newAccessToken = response.data['accessToken'];
-
-                  // Save new access token
-                  await storage.writeSecureData('token', newAccessToken);
-
-                  // Retry the original request with new token
-                  error.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
-                  final retryResponse = await _dio.fetch(error.requestOptions);
-                  return handler.resolve(retryResponse);
+                  final newAccessToken = response.data['accessToken'] ?? response.data['token'];
+                  if (newAccessToken != null) {
+                    await storage.writeSecureData('token', newAccessToken);
+                    error.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+                    final retryResponse = await Dio(BaseOptions(baseUrl: accounturl)).fetch(error.requestOptions);
+                    return handler.resolve(retryResponse);
+                  }
                 }
               } catch (e) {
-                // Refresh failed — user needs to login again
                 await storage.clearSecureData();
               }
             }
@@ -59,6 +53,6 @@ class DioClient {
         },
       ),
     );
-    return _dio;
-  }
+
+  static Dio get instance => _dio;
 }

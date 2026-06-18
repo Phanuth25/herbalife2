@@ -11,10 +11,9 @@ class CartProvider extends ChangeNotifier {
   final Dio _dio = DioClient.instance;
   String? message;
   bool isLoading = false;
-  String? id;
+  String? userId; // Member ID
   int? invoiceId;
-  int cartCount = 0;
-  double point = 0.0;
+  double totalPoints = 0.0;
   List<CartItemModel> cartItems = [];
   Map<int, int> productInvoiceMap = {};
 
@@ -34,137 +33,120 @@ class CartProvider extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     try {
-      id ??= await dataProvider.readSecureData('userId');
-      final response = await _dio.get(('$accounturl/getitem/$id'));
-      final data = response.data;
+      userId ??= await dataProvider.readSecureData('userId');
+      if (userId == null) return;
+      
+      // The DioClient interceptor auto-injects the token here
+      final response = await _dio.get('$accounturl/getitem/$userId');
       if (response.statusCode == 200) {
-        final cart = CartModel.fromJson(data);
+        final cart = CartModel.fromJson(response.data);
         cartItems = cart.data;
-        // Sum up total points: unit point * quantity
-        point = cartItems.fold(0.0, (sum, item) => sum + (double.tryParse(item.point) ?? 0.0) * item.quantity);
+        totalPoints = cartItems.fold(0.0, (sum, item) => sum + (double.tryParse(item.point) ?? 0.0) * item.quantity);
         message = cart.message;
+        
+        productInvoiceMap.clear();
+        for (var item in cartItems) {
+          productInvoiceMap[item.product] = item.id;
+        }
       } else {
         cartItems = [];
-        point = 0.0;
-        message = data['message'];
+        totalPoints = 0.0;
       }
     } catch (e) {
-      if (e is DioException && e.response != null) {
-        cartItems = [];
-        point = 0.0;
-        message = e.response?.data['message'] ?? "Failed";
-      } else {
-        message = "Network error: $e";
-      }
+      cartItems = [];
+      totalPoints = 0.0;
     } finally {
       isLoading = false;
-      notifyListeners();
+      notifyListeners(); // Enforces a visual refresh
     }
   }
 
-  Future<void> postitem(int userid, int product, int quantity) async {
+  Future<void> postitem(String? userid, int product, int quantity) async {
     message = "";
     invoiceId = null;
     try {
+      // Clean call: DioClient takes care of authorization headers behind the scenes
       final response = await _dio.post(
-        ("$accounturl/postitem"),
+        "$accounturl/postitem",
         data: {'userid': userid, 'product': product, 'quantity': quantity},
       );
-      final data = response.data;
       if (response.statusCode == 200) {
-        message = data['message'];
-        invoiceId = data['invoiceId'];
-        saveInvoiceId(product, invoiceId!);
-        await fetchCartItems();
-      } else {
-        message = data['message'];
-        invoiceId = null;
+        message = response.data['message'];
+        invoiceId = response.data['invoiceId'];
+        if (invoiceId != null) {
+          saveInvoiceId(product, invoiceId!);
+        }
+        await fetchCartItems(); // Triggers items reload and forces green border
       }
     } catch (e) {
       message = "Network failed: $e";
-      invoiceId = null;
     } finally {
-      isLoading = false;
       notifyListeners();
     }
   }
 
   Future<void> postitem2(int invoiceid, int quantity) async {
-    message = "";
-    invoiceId = null;
     try {
       final response = await _dio.patch(
         "$accounturl/postquantity",
         data: {'invoiceid': invoiceid, 'quantity': quantity},
       );
-      final data = response.data;
       if (response.statusCode == 200) {
-        message = data['message'];
         await fetchCartItems();
-      } else {
-        message = data['message'];
       }
     } catch (e) {
-      message = "Network failed: $e";
-      invoiceId = null;
+      print("Update quantity failed: $e");
     } finally {
-      isLoading = false;
       notifyListeners();
     }
   }
 
   Future<void> deleteitem(int invoiceId) async {
-    message = "";
-    isLoading = true;
-    notifyListeners();
     try {
       final response = await _dio.delete(("$accounturl/deleteitem/$invoiceId"));
-      final data = response.data;
       if (response.statusCode == 200) {
-        message = data['message'];
         await fetchCartItems();
-      } else {
-        message = data['message'];
       }
     } catch (e) {
-      message = "Network failed: $e";
+      print("Delete item failed: $e");
     } finally {
-      isLoading = false;
       notifyListeners();
     }
   }
 
   Future<void> plusinfos(double point, ProfileProvider profileProvider) async {
-    message = "";
     try {
-      id ??= await dataProvider.readSecureData('userId');
+      String? infoId = await dataProvider.readSecureData('infoId');
+      if (infoId == null) return;
+      
       final response = await _dio.patch(
         '$accounturl/plusinfos',
-        data: {'id': id, 'point': point},
+        data: {'id': infoId, 'point': point},
       );
       if (response.statusCode == 200) {
         await profileProvider.getProfile();
       }
     } catch (e) {
-      message = "Network failed: $e";
+      print("Plus point failed: $e");
     } finally {
       notifyListeners();
     }
   }
 
   Future<void> minusinfos(double point, ProfileProvider profileProvider) async {
-    message = "";
     try {
-      id ??= await dataProvider.readSecureData('userId');
+      String? infoId = await dataProvider.readSecureData('infoId');
+      if (infoId == null) return;
+
       final response = await _dio.patch(
         '$accounturl/removeinfos',
-        data: {'id': id, 'point': point},
+        data: {'id': infoId, 'point': point},
       );
       if (response.statusCode == 200) {
         await profileProvider.getProfile();
       }
     } catch (e) {
-      message = "Network failed: $e";
+      print("Minus point failed: $e");
     } finally {
       notifyListeners();
     }

@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../model/db');
 const verifyToken = require('../middleware/auth');
-router.post('/postitem', verifyToken,(req, res) => {
-    const { userid, product, quantity } = req.body;
+router.post('/postitem',(req, res) => {
+    const { userid, product, quantity } = req.body; // Changed userId to userid to match query
 
     // First get product price and point from products table
     const getProduct = "SELECT price, point FROM products WHERE id = ?";

@@ -1,11 +1,11 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart'; // Replaced http with dio
+import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:project2/herbalife/public/provider/data_provider.dart';
 import 'package:project2/herbalife/public/constants/constants.dart';
 
 class Authprovider extends ChangeNotifier {
-  // Initialize Dio instance
   final Dio _dio = Dio();
   final SecureStorageProvider dataProvider = SecureStorageProvider();
 
@@ -13,10 +13,10 @@ class Authprovider extends ChangeNotifier {
   bool isLoading = false;
   String? userToken;
   String? refreshToken;
-  String? userId;
-  String? id;
-  File? image;
-  double totalPoints = 0;
+  String? userId; // Member ID
+  String? id;     // Users Table PK
+  String? infoId; // Infos Table PK
+  XFile? image;
 
   String get isUserid => userId ?? "No id";
 
@@ -31,22 +31,23 @@ class Authprovider extends ChangeNotifier {
         data: {'userid': userid, 'password': password},
       );
 
-      // Dio automatically decodes JSON, so no need for json.decode()
       final data = response.data;
 
       if (response.statusCode == 200) {
         message = data['message'];
         userToken = data['token'];
-        refreshToken = data['refreshtoken'];
-        userId = data['userid']?.toString();
-        print("userid$userId");
-        id = data['id']?.toString();
+        refreshToken = data['refreshToken'] ?? data['refreshtoken'];
+        infoId = data['infoId']?.toString();
+
+        // Save to secure storage
+        if (userToken != null) await dataProvider.writeSecureData('token', userToken!);
+        if (infoId != null) await dataProvider.writeSecureData('infoId', infoId!);
+        
       } else {
-        message = data['message'];
+        message = data['message'] ?? "Login failed";
         userToken = null;
       }
     } on DioException catch (e) {
-      // Dio catches non-200 status codes as exceptions by default
       message = e.response?.data['message'] ?? "Login failed: ${e.message}";
     } catch (e) {
       message = "Login failed: $e";
@@ -57,25 +58,31 @@ class Authprovider extends ChangeNotifier {
   }
 
   Future<void> register(
-      String name,
-      String address,
-      String phone,
-      String email,
-      File image,
-      ) async {
+    String name,
+    String address,
+    String phone,
+    String email,
+    XFile image,
+  ) async {
     message = "";
     isLoading = true;
     notifyListeners();
 
     try {
-      // Dio uses FormData for multipart/form-data requests
-      String fileName = image.path.split('/').last;
+      MultipartFile multipartFile;
+      if (kIsWeb) {
+        final bytes = await image.readAsBytes();
+        multipartFile = MultipartFile.fromBytes(bytes, filename: image.name);
+      } else {
+        multipartFile = await MultipartFile.fromFile(image.path, filename: image.name);
+      }
+
       FormData formData = FormData.fromMap({
         'name': name,
         'address': address,
         'phone': phone,
         'email': email,
-        'image': await MultipartFile.fromFile(image.path, filename: fileName),
+        'image': multipartFile,
       });
 
       final response = await _dio.post(
@@ -87,7 +94,7 @@ class Authprovider extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         message = "successfully";
-        userId = data['userid']?.toString();
+        userId = data['userId']?.toString() ?? data['userid']?.toString();
       } else {
         message = data['error'] ?? data['message'] ?? "Registration failed";
       }
@@ -101,7 +108,7 @@ class Authprovider extends ChangeNotifier {
     }
   }
 
-  Future<void> register2(int userid, int password, int userids) async {
+  Future<void> register2(String userid, String password, String userids) async {
     message = "";
     isLoading = true;
     notifyListeners();
@@ -118,20 +125,17 @@ class Authprovider extends ChangeNotifier {
 
       final data = response.data;
       if (response.statusCode == 200) {
-        message = data['message'];
-        userId = data['userids']?.toString();
+        message = data['message'] ?? "Registered successfully";
       } else {
-        message = data['message'];
+        message = data['message'] ?? "Registration failed";
       }
     } on DioException catch (e) {
-      message = e.response?.data['message'] ?? "Network failed";
+      message = e.response?.data['message'] ?? "Network error: ${e.message}";
     } catch (e) {
-      message = "Network failed";
+      message = "Network failed: $e";
     } finally {
       isLoading = false;
       notifyListeners();
     }
   }
-
-
 }

@@ -1,7 +1,7 @@
-import 'dart:io';
-
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:project2/herbalife/public/provider/data_provider.dart';
 import 'package:project2/herbalife/public/constants/constants.dart';
 import 'package:project2/herbalife/public/service/dio_client.dart';
@@ -27,17 +27,11 @@ class ProfileProvider extends ChangeNotifier {
   String? id; // Store as String (Database Primary Key)
 
   String get isemail => email ?? "No data";
-
   String get isphone => phone ?? "No data";
-
   String get isaddress => address ?? "No data";
-
   String get isname => name ?? "No data";
-
   String get ispoint => point ?? "No data";
-
   String get isposition => position ?? "No data";
-
   String get isdiscount => discount ?? "No data";
 
   Future<void> getProfile() async {
@@ -46,10 +40,9 @@ class ProfileProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Restore state from secure storage if variables are null (e.g. after app restart)
       userId ??= await dataProvider.readSecureData('userId');
-      print('ID value: $userId');
-        final response = await _dio.get(("$accounturl/profile/$userId"));
+      debugPrint('userId: $userId');
+      final response = await _dio.get(("$accounturl/profile/$userId"));
       final data = response.data;
       if (response.statusCode == 200) {
         id = data['id']?.toString();
@@ -73,22 +66,28 @@ class ProfileProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> updateProfile(File image) async {
+  Future<void> updateProfile(XFile image) async {
     message = "";
     isLoading = true;
     notifyListeners();
     try {
-      // Restore state from secure storage if variables are null (e.g. after app restart)
       id ??= await dataProvider.readSecureData('id');
-
       if (id == null) {
         message = "No user ID found";
         return;
       }
-      String fileName = image.path.split('/').last;
+
+      MultipartFile multipartFile;
+      if (kIsWeb) {
+        final bytes = await image.readAsBytes();
+        multipartFile = MultipartFile.fromBytes(bytes, filename: image.name);
+      } else {
+        multipartFile = await MultipartFile.fromFile(image.path, filename: image.name);
+      }
+
       FormData formData = FormData.fromMap({
         'id': id,
-        'image': await MultipartFile.fromFile(image.path, filename: fileName),
+        'image': multipartFile,
       });
 
       var response = await _dio.post(
@@ -97,12 +96,11 @@ class ProfileProvider extends ChangeNotifier {
       );
 
       final data = response.data;
-
       if (response.statusCode == 200) {
         message = "successfully updated";
         photo = data['photo'];
       } else {
-        message = data['error'] ?? data['message'] ?? "Registration failed";
+        message = data['error'] ?? data['message'] ?? "Update failed";
       }
     } catch (e) {
       message = "Network error $e";

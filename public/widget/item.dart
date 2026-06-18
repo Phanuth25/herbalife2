@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:project2/herbalife/public/provider/cart_provider.dart';
 import 'package:project2/herbalife/public/provider/profile_provider.dart';
 
+import '../provider/data_provider.dart';
+
 class ImageCounterCard extends StatefulWidget {
   final String imagepath;
   final String product;
@@ -70,12 +72,15 @@ class _ImageCounterCardState extends State<ImageCounterCard>
   Widget build(BuildContext context) {
     final cartProvider = context.watch<CartProvider>();
     final profileProvider = context.watch<ProfileProvider>();
-    final int userId = int.tryParse(profileProvider.id ?? '0') ?? 0;
+    final dataProvider = Provider.of<SecureStorageProvider>(context);
+    // Better way to get Member ID: try cartProvider first, then profileProvider
+    final userId = dataProvider.readSecureData('userId');
     final int productId = int.tryParse(widget.id) ?? 0;
 
     final cartItem = cartProvider.cartItems
         .where((item) => item.product == productId)
         .firstOrNull;
+
     final bool isSelected = cartItem != null;
     final int currentCounter = cartItem?.quantity ?? 0;
 
@@ -90,18 +95,31 @@ class _ImageCounterCardState extends State<ImageCounterCard>
       scale: _scaleAnim ?? const AlwaysStoppedAnimation(1.0),
       child: GestureDetector(
         onTap: () async {
+          if (userId == 0) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text("Please login first")));
+            return;
+          }
+
           final bool wasSelected = isSelected;
           _onTap();
-          // first select
+
           if (!wasSelected) {
-            // card is being selected → add item
-            await cartProvider.postitem(userId, productId, 1);
-            await cartProvider.plusinfos(double.parse(widget.point), profileProvider);
+            // card is being selected -> add item
+            await cartProvider.postitem(await userId, productId, 1);
+            if (cartProvider.invoiceId != null) {
+              await cartProvider.plusinfos(
+                double.parse(widget.point),
+                profileProvider,
+              );
+            }
           } else {
-            // card is being deselected → remove item
+            // card is being deselected -> remove item
             final int? invoiceId = cartProvider.getInvoiceId(productId);
             if (invoiceId != null) {
-              final double pointsToRemove = currentCounter * (double.tryParse(widget.point) ?? 0.0);
+              final double pointsToRemove =
+                  currentCounter * (double.tryParse(widget.point) ?? 0.0);
               await cartProvider.deleteitem(invoiceId);
               cartProvider.clearInvoiceId(productId);
               await cartProvider.minusinfos(pointsToRemove, profileProvider);
@@ -288,16 +306,28 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                         // minus
                         GestureDetector(
                           onTap: () async {
-                            final int? invoiceId = cartProvider.getInvoiceId(productId);
-                            if (invoiceId == null || currentCounter <= 0) return;
+                            final int? invoiceId = cartProvider.getInvoiceId(
+                              productId,
+                            );
+                            if (invoiceId == null || currentCounter <= 0)
+                              return;
 
                             if (currentCounter == 1) {
                               await cartProvider.deleteitem(invoiceId);
                               cartProvider.clearInvoiceId(productId);
-                              await cartProvider.minusinfos(double.parse(widget.point), profileProvider);
+                              await cartProvider.minusinfos(
+                                double.parse(widget.point),
+                                profileProvider,
+                              );
                             } else {
-                              await cartProvider.postitem2(invoiceId, currentCounter - 1);
-                              await cartProvider.minusinfos(double.parse(widget.point), profileProvider);
+                              await cartProvider.postitem2(
+                                invoiceId,
+                                currentCounter - 1,
+                              );
+                              await cartProvider.minusinfos(
+                                double.parse(widget.point),
+                                profileProvider,
+                              );
                             }
                             widget.onSelect2();
                           },
@@ -330,39 +360,19 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                         GestureDetector(
                           onTap: () async {
                             widget.onSelect();
-                            if (!mounted) return; // ← add this guard before using widget/context
-                            final int? invoiceId = cartProvider.getInvoiceId(productId);
+                            if (!mounted) return;
+                            final int? invoiceId = cartProvider.getInvoiceId(
+                              productId,
+                            );
                             if (invoiceId != null) {
-                              await cartProvider.postitem2(invoiceId, currentCounter + 1);
-                              if (!mounted) return; // ← add this guard before using widget/context
-                              await cartProvider.plusinfos(double.parse(widget.point), profileProvider);
-
-                              if(!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Row(
-                                    children: [
-                                      Icon(
-                                        Icons.add_shopping_cart_rounded,
-                                        color: Colors.white,
-                                        size: 16,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        "Added to cart",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  backgroundColor: const Color(0xFF2E7D32),
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  duration: const Duration(seconds: 2),
-                                ),
+                              await cartProvider.postitem2(
+                                invoiceId,
+                                currentCounter + 1,
+                              );
+                              if (!mounted) return;
+                              await cartProvider.plusinfos(
+                                double.parse(widget.point),
+                                profileProvider,
                               );
                             }
                           },

@@ -15,16 +15,20 @@ const updateprofileRoute = require('./private/controller/updateprofile');
 const removeinfopoint = require('./private/controller/removeinfopoint');
 const plusinfos = require('./private/controller/plusinfospoint');
 
+// Improved CORS configuration
+app.use(cors({
+  origin: '*', // Allow all origins for development
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 
-
-app.use(cors());
 app.use(express.json());
 
 // Routes
 app.use('/api', loginRoute);
 app.use('/api', profileRoute);
 app.use('/api', postitemRoute);
-app.use('/api/deleteitem', deleteitemRoute); // Specific path for delete
+app.use('/api/deleteitem', deleteitemRoute);
 app.use('/api', registerRoute);
 app.use('/api', register2Route);
 app.use('/api', khqrRoute);
@@ -33,10 +37,5 @@ app.use('/api', postitemqty);
 app.use('/api', updateprofileRoute);
 app.use('/api', removeinfopoint);
 app.use('/api', plusinfos);
-
-
-
-
-
 
 app.listen(3000, () => console.log('Server started on port 3000'));

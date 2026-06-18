@@ -8,11 +8,12 @@ class CartModel {
 
   factory CartModel.fromJson(Map<String, dynamic> json) {
     return CartModel(
-      success: json['success'] as bool,
-      message: json['message'] as String,
-      data: (json['data'] as List)
-          .map((item) => CartItemModel.fromJson(item))
-          .toList(),
+      success: json['success'] as bool? ?? false,
+      message: json['message'] as String? ?? "",
+      data: (json['data'] as List?)
+              ?.map((item) => CartItemModel.fromJson(item))
+              .toList() ??
+          [],
     );
   }
 }
@@ -39,13 +40,15 @@ class CartItemModel {
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
     return CartItemModel(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      product: json['product'] as int,
-      quantity: json['quantity'] as int,
-      total: json['total'] as String,
-      point: json['point'] as String,
-      datetime: DateTime.parse(json['datetime'] as String),
+      id: int.tryParse(json['id'].toString()) ?? 0,
+      name: json['name']?.toString() ?? "",
+      product: int.tryParse(json['product'].toString()) ?? 0,
+      quantity: int.tryParse(json['quantity'].toString()) ?? 0,
+      total: json['total']?.toString() ?? "0.00",
+      point: json['point']?.toString() ?? "0",
+      datetime: json['datetime'] != null 
+          ? DateTime.tryParse(json['datetime'].toString()) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 }

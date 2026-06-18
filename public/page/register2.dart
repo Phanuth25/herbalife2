@@ -18,7 +18,6 @@ class _Register2State extends State<Register2>
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool _obscurePassword = true;
-
   AnimationController? _animController;
   Animation<double>? _fadeAnim;
   Animation<Offset>? _slideAnim;
@@ -48,38 +47,33 @@ class _Register2State extends State<Register2>
   }
 
   Future<void> _submit(Authprovider authProvider) async {
-    final useridText = useridController.text.trim();
-    final passwordText = passwordController.text.trim();
+    final userid = useridController.text.trim();
+    final password = passwordController.text.trim();
 
-    if (useridText.isEmpty || passwordText.isEmpty) {
+    // 1. Validate that fields are not empty
+    if (userid.isEmpty || password.isEmpty) {
       _showError('Please fill in all fields.');
       return;
     }
 
-    final userid = int.tryParse(useridText);
-    final password = int.tryParse(passwordText);
-
-    if (userid == null || password == null) {
-      _showError('User ID and Password must be numbers.');
-
+    // 2. Get the session ID from Step 1 (Already a String in Authprovider)
+    final userids = authProvider.userId; 
+    if (userids == null || userids.isEmpty) {
+      _showError('Session error. Please complete Step 1 first.');
       return;
     }
 
-    // userids comes automatically from the provider after Register step 1
-    final userids = int.tryParse(authProvider.userId ?? '');
-    if (userids == null) {
-      _showError('Session error. Please complete step 1 first.');
-      return;
-    }
-
+    // 3. Call the provider with raw Strings (Correctly matching the signature)
     await authProvider.register2(userid, password, userids);
 
     if (!mounted) return;
 
+    // 4. Handle Response
     if (authProvider.message == 'successfully' ||
         authProvider.message == 'Registered successfully') {
       _showSuccessDialog();
     } else {
+      // This will now show the actual server error (e.g. "User ID already exists")
       _showError(authProvider.message ?? 'Registration failed.');
     }
   }
@@ -145,10 +139,10 @@ class _Register2State extends State<Register2>
             child: ElevatedButton(
               onPressed: () {
                 Navigator.pop(ctx);
-                Navigator.pop(context);
-                Navigator.pushReplacement(
+                Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const Login()),
+                  (route) => false,
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -180,7 +174,6 @@ class _Register2State extends State<Register2>
       backgroundColor: const Color(0xFFF1F8F1),
       body: Stack(
         children: [
-          // decorative circles
           Positioned(
             top: -80,
             left: -60,
@@ -219,7 +212,6 @@ class _Register2State extends State<Register2>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // back button
                         Align(
                           alignment: Alignment.centerLeft,
                           child: GestureDetector(
@@ -247,11 +239,9 @@ class _Register2State extends State<Register2>
                           ),
                         ),
 
-                        // logo
                         Image.asset('assets/images/Herblogo.png', width: 180),
                         const SizedBox(height: 4),
 
-                        // card
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
@@ -271,7 +261,6 @@ class _Register2State extends State<Register2>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // title block
                               Row(
                                 children: [
                                   Container(
@@ -283,11 +272,11 @@ class _Register2State extends State<Register2>
                                     ),
                                   ),
                                   const SizedBox(width: 12),
-                                  Column(
+                                  const Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
+                                      Text(
                                         'Create Login',
                                         style: TextStyle(
                                           fontSize: 24,
@@ -300,7 +289,7 @@ class _Register2State extends State<Register2>
                                         'Set up your account credentials',
                                         style: TextStyle(
                                           fontSize: 13,
-                                          color: Colors.grey.shade500,
+                                          color: Color(0xFF9E9E9E),
                                           fontWeight: FontWeight.w400,
                                         ),
                                       ),
@@ -314,7 +303,6 @@ class _Register2State extends State<Register2>
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // User ID field
                                     _buildLabel('User ID'),
                                     const SizedBox(height: 6),
                                     _buildField(
@@ -322,19 +310,8 @@ class _Register2State extends State<Register2>
                                       hint: 'Enter your user ID',
                                       icon: Icons.badge_outlined,
                                       keyboardType: TextInputType.number,
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return 'Please enter your user ID';
-                                        }
-                                        if (int.tryParse(value) == null) {
-                                          return 'Please enter a valid user ID';
-                                        }
-                                        return null;
-                                      },
                                     ),
                                     const SizedBox(height: 16),
-
-                                    // Password field
                                     _buildLabel('Password'),
                                     const SizedBox(height: 6),
                                     _buildPasswordField(),
@@ -343,7 +320,6 @@ class _Register2State extends State<Register2>
                                 ),
                               ),
 
-                              // Submit button
                               SizedBox(
                                 width: double.infinity,
                                 height: 52,
@@ -420,11 +396,9 @@ class _Register2State extends State<Register2>
     required String hint,
     required IconData icon,
     TextInputType? keyboardType,
-    String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
-      validator: validator,
       keyboardType: keyboardType,
       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
@@ -450,24 +424,18 @@ class _Register2State extends State<Register2>
           borderSide: const BorderSide(color: Color(0xFF43A047), width: 1.8),
         ),
       ),
+      validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
     );
   }
 
   Widget _buildPasswordField() {
     return TextFormField(
       controller: passwordController,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter your password';
-        }
-        return null;
-      },
-
       obscureText: _obscurePassword,
       keyboardType: TextInputType.number,
       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
-        hintText: 'Enter your password (numbers only)',
+        hintText: 'Enter numeric password',
         hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
         prefixIcon: const Icon(
           Icons.lock_outline_rounded,
@@ -503,6 +471,7 @@ class _Register2State extends State<Register2>
           borderSide: const BorderSide(color: Color(0xFF43A047), width: 1.8),
         ),
       ),
+      validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
     );
   }
 }

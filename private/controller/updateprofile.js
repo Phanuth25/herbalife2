@@ -3,13 +3,15 @@ const router = express.Router();
 const db = require('../model/db');
 const multer = require('multer');
 const cloudinary = require('./cloudinary');
- const verifyToken = require('../middleware/auth');
+const verifyToken = require('../middleware/auth');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+
 router.use(express.json());
 
-router.patch('/upload', upload.single('image'), verifyToken,async (req, res) => {
-    const { id } = req.body; // ✅ get user id from request
+// Changed from PATCH /upload to POST /upload-image to match Flutter
+router.post('/upload-image', upload.single('image'), verifyToken, async (req, res) => {
+    const { id } = req.body; 
 
     if (!id) {
         return res.status(400).json({ error: "User ID is required" });
@@ -31,16 +33,15 @@ router.patch('/upload', upload.single('image'), verifyToken,async (req, res) => 
         });
 
         const imageUrl = result.secure_url;
+        const sql = "UPDATE infos SET photo = ? WHERE id = ?";
 
-        const sql = "UPDATE infos SET photo = ? WHERE id = ?"; // ✅ only update this user
-
-        db.query(sql, [imageUrl, id], (err, results) => {
+        db.query(sql, [imageUrl, id], (err) => {
             if (err) return res.status(500).json({ error: err.message });
 
             res.status(200).json({
                 success: true,
                 message: "Updated successfully",
-                photo: imageUrl, // ✅ return new URL so Flutter can update UI
+                photo: imageUrl,
             });
         });
 
