@@ -1,19 +1,13 @@
-require('dotenv').config({ path: './private/.env' });
-const express = require('express');
-const router = express.Router();
-const db = require('../model/db');
+const User = require('../model/userModel');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const JWT_SECRET = process.env.JWT_SECRET;
 const REFRESH_SECRET = process.env.REFRESH_SECRET;
-const bcrypt = require('bcrypt');
+const saltRounds = 12;
 
-router.use(express.json());
-
-router.post('/login', (req, res) => {
-    const { userid, password } = req.body; 
-    const sql = "SELECT * FROM users WHERE userid = ?";
-
-    db.query(sql, [userid], async (err, results) => {
+exports.login = (req, res) => {
+    const { userid, password } = req.body;
+    User.findByUserId(userid, async (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
 
         if (results.length === 0) {
@@ -26,7 +20,7 @@ router.post('/login', (req, res) => {
         const user = results[0];
         const dbPassword = String(user.password).trim();
         const inputPassword = String(password).trim();
-        
+
         const isMatch = await bcrypt.compare(inputPassword, dbPassword);
         if (!isMatch) {
             return res.status(401).json({
@@ -47,8 +41,7 @@ router.post('/login', (req, res) => {
             { expiresIn: '7d' }
         );
 
-        const updateSql = "UPDATE users SET refresh_token = ? WHERE id = ?";
-        db.query(updateSql, [refreshtoken, user.id], (updErr) => {
+        User.updateRefreshToken(user.id, refreshtoken, (updErr) => {
             if (updErr) return res.status(500).json({ error: "Failed to save session" });
 
             res.status(200).json({
@@ -56,21 +49,20 @@ router.post('/login', (req, res) => {
                 message: 'Login successful',
                 token: token,
                 refreshToken: refreshtoken,
-                infoId: user.userids // Added this to link to the infos table correctly
+                infoId: user.userids
             });
         });
     });
-});
+};
 
-router.post('/refresh', (req, res) => {
+exports.refresh = (req, res) => {
     const { token } = req.body;
     if (!token) return res.status(401).json({ message: "Refresh Token Required" });
 
     jwt.verify(token, REFRESH_SECRET, (err, decoded) => {
         if (err) return res.status(403).json({ message: "Invalid Refresh Token" });
 
-        const sql = "SELECT * FROM users WHERE id = ? AND refresh_token = ?";
-        db.query(sql, [decoded.id, token], (dbErr, results) => {
+        User.findByRefreshToken(decoded.id, token, (dbErr, results) => {
             if (dbErr || results.length === 0) {
                 return res.status(403).json({ message: "Token revoked or user not found" });
             }
@@ -85,6 +77,38 @@ router.post('/refresh', (req, res) => {
             res.json({ token: newAccessToken, accessToken: newAccessToken });
         });
     });
-});
+};
 
-module.exports = router;
+exports.registerUser = (req, res) => {
+    const { userid, password, userids } = req.body;
+
+    if (!userid || !password || !userids) {
+        return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    User.findByUserId(userid, async (err, results) => {
+        if (err) return res.status(500).json({ success: false, message: err.message });
+
+        if (results.length > 0) {
+            return res.status(409).json({
+                success: false,
+                message: "User ID already exists"
+            });
+        }
+
+        try {
+            const hashedPassword = await bcrypt.hash(String(password), saltRounds);
+            User.create(userid, hashedPassword, userids, (err, insertResult) => {
+                if (err) return res.status(500).json({ success: false, message: err.message });
+
+                res.status(200).json({
+                    success: true,
+                    message: "Registered successfully",
+                    id: insertResult.insertId
+                });
+            });
+        } catch (hashError) {
+            res.status(500).json({ success: false, message: "Error securing password" });
+        }
+    });
+};

@@ -109,10 +109,6 @@ class _ImageCounterCardState extends State<ImageCounterCard>
             // card is being selected -> add item
             await cartProvider.postitem(await userId, productId, 1);
             if (cartProvider.invoiceId != null) {
-              await cartProvider.plusinfos(
-                double.parse(widget.point),
-                profileProvider,
-              );
             }
           } else {
             // card is being deselected -> remove item
@@ -122,7 +118,6 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                   currentCounter * (double.tryParse(widget.point) ?? 0.0);
               await cartProvider.deleteitem(invoiceId);
               cartProvider.clearInvoiceId(productId);
-              await cartProvider.minusinfos(pointsToRemove, profileProvider);
             }
           }
         },
@@ -315,18 +310,10 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                             if (currentCounter == 1) {
                               await cartProvider.deleteitem(invoiceId);
                               cartProvider.clearInvoiceId(productId);
-                              await cartProvider.minusinfos(
-                                double.parse(widget.point),
-                                profileProvider,
-                              );
                             } else {
                               await cartProvider.postitem2(
                                 invoiceId,
                                 currentCounter - 1,
-                              );
-                              await cartProvider.minusinfos(
-                                double.parse(widget.point),
-                                profileProvider,
                               );
                             }
                             widget.onSelect2();
@@ -370,10 +357,6 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                                 currentCounter + 1,
                               );
                               if (!mounted) return;
-                              await cartProvider.plusinfos(
-                                double.parse(widget.point),
-                                profileProvider,
-                              );
                             }
                           },
                           child: Container(
