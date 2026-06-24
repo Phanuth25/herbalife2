@@ -1,4 +1,4 @@
-const db = require('./db');
+import db from './db.js';
 
 const Transaction = {
     create: (data, callback) => {
@@ -18,4 +18,4 @@ const Transaction = {
     }
 };
 
-module.exports = Transaction;
+export default Transaction;

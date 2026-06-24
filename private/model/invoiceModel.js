@@ -1,10 +1,11 @@
-const db = require('./db');
+import db from './db.js';
 
 const Invoice = {
     getByUserId: (userId, callback) => {
         const sql = `
             SELECT
                 inv.id,
+                inv.userid,
                 p.name,
                 inv.product,
                 inv.quantity,
@@ -32,7 +33,14 @@ const Invoice = {
     updateQuantity: (id, quantity, total, point, callback) => {
         const sql = "UPDATE invoices SET quantity = ?, total = ?, point = ? WHERE id = ?";
         db.query(sql, [quantity, total, point, id], callback);
+    },
+
+    markAsPurchased: (userid, callback) => {
+        const sql = "UPDATE invoices SET ispurchase = 1 WHERE userid = ?";
+        db.query(sql, [userid], callback);
     }
 };
 
-module.exports = Invoice;
+
+
+export default Invoice;

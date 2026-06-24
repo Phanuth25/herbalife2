@@ -1,6 +1,6 @@
-const Transaction = require('../model/transactionModel');
+import Transaction from '../model/transactionModel.js';
 
-exports.saveTransaction = (req, res) => {
+export function saveTransaction(req, res) {
     const { userid, md5, amount, bill_number, status } = req.body;
     Transaction.create({ userid, md5, amount, bill_number, status }, (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -10,9 +10,9 @@ exports.saveTransaction = (req, res) => {
             transactionId: results.insertId
         });
     });
-};
+}
 
-exports.updateTransaction = (req, res) => {
+export function updateTransaction(req, res) {
     const { md5 } = req.params;
     Transaction.updateStatusByMd5(md5, 'paid', (err) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -21,9 +21,9 @@ exports.updateTransaction = (req, res) => {
             message: "Transaction updated successfully"
         });
     });
-};
+}
 
-exports.getTransactions = (req, res) => {
+export function getTransactions(req, res) {
     const { userid } = req.params;
     Transaction.getByUserId(userid, (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -33,4 +33,4 @@ exports.getTransactions = (req, res) => {
             data: results
         });
     });
-};
+}

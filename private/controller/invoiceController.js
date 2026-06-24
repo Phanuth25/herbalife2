@@ -1,7 +1,8 @@
-const Invoice = require('../model/invoiceModel');
-const Product = require('../model/productModel');
+import Invoice from '../model/invoiceModel.js';
+import Product from '../model/productModel.js';
+import db from '../model/db.js';
 
-exports.getItems = (req, res) => {
+export function getItems(req, res) {
     const userId = req.params.id;
     Invoice.getByUserId(userId, (err, results) => {
         if (err) {
@@ -14,9 +15,9 @@ exports.getItems = (req, res) => {
             data: results
         });
     });
-};
+}
 
-exports.postItem = (req, res) => {
+export function postItem(req, res) {
     const { userid, product, quantity } = req.body;
     Product.findById(product, (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -38,9 +39,9 @@ exports.postItem = (req, res) => {
             });
         });
     });
-};
+}
 
-exports.deleteItem = (req, res) => {
+export function deleteItem(req, res) {
     const product = req.params.product;
     Invoice.delete(product, (err, results) => {
         if (err) {
@@ -55,13 +56,11 @@ exports.deleteItem = (req, res) => {
             message: "Removed successfully",
         });
     });
-};
+}
 
-exports.updateQuantity = (req, res) => {
+export function updateQuantity(req, res) {
     const { invoiceid, quantity } = req.body;
 
-    // This logic is a bit complex for a controller, but I'll keep it consistent with original
-    const db = require('../model/db'); // Needed for the specific sequence if not in model
     const getInvoice = "SELECT product FROM invoices WHERE id = ?";
 
     db.query(getInvoice, [invoiceid], (err, invoiceResults) => {
@@ -91,4 +90,26 @@ exports.updateQuantity = (req, res) => {
             });
         });
     });
-};
+}
+
+export function markAsPurchasedByUserController(req, res) {
+    const userid = req.params.userid;
+    if (!userid) {
+        return res.status(400).json({ message: "User ID is required" });
+    }
+
+    Invoice.markAsPurchased(userid, (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "No unpurchased invoices found for this user" });
+        }
+
+        return res.status(200).json({
+            message: "Invoices marked as purchased",
+            updated: result.affectedRows
+        });
+    });
+}

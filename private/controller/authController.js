@@ -1,11 +1,14 @@
-const User = require('../model/userModel');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+import User from '../model/userModel.js';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+const { sign, verify } = jwt;
+const { compare, hash } = bcrypt;
+
 const JWT_SECRET = process.env.JWT_SECRET;
 const REFRESH_SECRET = process.env.REFRESH_SECRET;
 const saltRounds = 12;
 
-exports.login = (req, res) => {
+export function login(req, res) {
     const { userid, password } = req.body;
     User.findByUserId(userid, async (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -21,7 +24,7 @@ exports.login = (req, res) => {
         const dbPassword = String(user.password).trim();
         const inputPassword = String(password).trim();
 
-        const isMatch = await bcrypt.compare(inputPassword, dbPassword);
+        const isMatch = await compare(inputPassword, dbPassword);
         if (!isMatch) {
             return res.status(401).json({
                 success: false,
@@ -29,13 +32,13 @@ exports.login = (req, res) => {
             });
         }
 
-        const token = jwt.sign(
+        const token = sign(
             { id: user.id, userid: user.userid },
             JWT_SECRET,
             { expiresIn: '15m' }
         );
 
-        const refreshtoken = jwt.sign(
+        const refreshtoken = sign(
             { id: user.id, userid: user.userid },
             REFRESH_SECRET,
             { expiresIn: '7d' }
@@ -53,13 +56,13 @@ exports.login = (req, res) => {
             });
         });
     });
-};
+}
 
-exports.refresh = (req, res) => {
+export function refresh(req, res) {
     const { token } = req.body;
     if (!token) return res.status(401).json({ message: "Refresh Token Required" });
 
-    jwt.verify(token, REFRESH_SECRET, (err, decoded) => {
+    verify(token, REFRESH_SECRET, (err, decoded) => {
         if (err) return res.status(403).json({ message: "Invalid Refresh Token" });
 
         User.findByRefreshToken(decoded.id, token, (dbErr, results) => {
@@ -68,7 +71,7 @@ exports.refresh = (req, res) => {
             }
 
             const user = results[0];
-            const newAccessToken = jwt.sign(
+            const newAccessToken = sign(
                 { id: user.id, userid: user.userid },
                 JWT_SECRET,
                 { expiresIn: '15m' }
@@ -77,9 +80,9 @@ exports.refresh = (req, res) => {
             res.json({ token: newAccessToken, accessToken: newAccessToken });
         });
     });
-};
+}
 
-exports.registerUser = (req, res) => {
+export function registerUser(req, res) {
     const { userid, password, userids } = req.body;
 
     if (!userid || !password || !userids) {
@@ -97,7 +100,7 @@ exports.registerUser = (req, res) => {
         }
 
         try {
-            const hashedPassword = await bcrypt.hash(String(password), saltRounds);
+            const hashedPassword = await hash(String(password), saltRounds);
             User.create(userid, hashedPassword, userids, (err, insertResult) => {
                 if (err) return res.status(500).json({ success: false, message: err.message });
 
@@ -111,4 +114,4 @@ exports.registerUser = (req, res) => {
             res.status(500).json({ success: false, message: "Error securing password" });
         }
     });
-};
+}

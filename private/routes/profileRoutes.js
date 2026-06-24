@@ -1,15 +1,15 @@
-const express = require('express');
-const router = express.Router();
-const profileController = require('../controller/profileController');
-const verifyToken = require('../middleware/auth');
-const multer = require('multer');
-const storage = multer.memoryStorage();
+import { Router } from 'express';
+const router = Router();
+import { getProfile, registerInfo, updatePhotoController, plusPoints, removePoints } from '../controller/profileController.js';
+import verifyToken from '../middleware/auth.js';
+import multer, { memoryStorage } from 'multer';
+const storage = memoryStorage();
 const upload = multer({ storage });
 
-router.get('/profile/:userId', profileController.getProfile);
-router.post('/register', upload.single('image'), profileController.registerInfo);
-router.post('/upload-image', verifyToken, upload.single('image'), profileController.updatePhoto);
-router.patch('/plusinfos', verifyToken, profileController.plusPoints);
-router.patch('/removeinfos', verifyToken, profileController.removePoints);
+router.get('/profile/:userId', getProfile);
+router.post('/register', upload.single('image'), registerInfo);
+router.post('/upload-image', verifyToken, upload.single('image'), updatePhotoController);
+router.patch('/plusinfos', verifyToken, plusPoints);
+router.patch('/removeinfos', verifyToken, removePoints);
 
-module.exports = router;
+export default router;

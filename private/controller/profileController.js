@@ -1,7 +1,7 @@
-const Info = require('../model/infoModel');
-const cloudinary = require('./cloudinary');
+import Info from '../model/infoModel.js';
+import cloudinary from './cloudinary.js';
 
-exports.getProfile = (req, res) => {
+export function getProfile(req, res) {
     const userId = req.params.userId;
     Info.getProfileById(userId, (err, results) => {
         if (err) {
@@ -25,16 +25,16 @@ exports.getProfile = (req, res) => {
             photo: info.photo || "No Photo"
         });
     });
-};
+}
 
-exports.registerInfo = async (req, res) => {
+export async function registerInfo(req, res) {
     const { name, address, phone, email } = req.body;
     if (!name || !email) return res.status(400).json({ error: "Name and Email are required" });
     if (!req.file) return res.status(400).json({ error: "Image file is required" });
 
     try {
         const result = await new Promise((resolve, reject) => {
-            cloudinary.uploader.upload_stream({ folder: 'uploads' }, (error, result) => {
+            cloudinary.upload_stream({ folder: 'uploads' }, (error, result) => {
                 if (error) reject(error);
                 else resolve(result);
             }).end(req.file.buffer);
@@ -49,15 +49,15 @@ exports.registerInfo = async (req, res) => {
         console.error("Upload Error:", error);
         return res.status(500).json({ error: "Failed to upload image to Cloudinary" });
     }
-};
+}
 
-exports.updatePhoto = async (req, res) => {
+export async function updatePhotoController(req, res) {
     const { id } = req.body;
     if (!id || !req.file) return res.status(400).json({ error: "User ID and Image are required" });
 
     try {
         const result = await new Promise((resolve, reject) => {
-            cloudinary.uploader.upload_stream({ folder: 'uploads' }, (error, result) => {
+            cloudinary.upload_stream({ folder: 'uploads' }, (error, result) => {
                 if (error) reject(error);
                 else resolve(result);
             }).end(req.file.buffer);
@@ -70,22 +70,22 @@ exports.updatePhoto = async (req, res) => {
     } catch (error) {
         return res.status(500).json({ error: "Failed to upload image" });
     }
-};
+}
 
-exports.plusPoints = (req, res) => {
+export function plusPoints(req, res) {
     const { id, point } = req.body;
     Info.updatePoints(id, point, true, (err, result) => {
         if (err) return res.status(500).json({ success: false, error: err.message });
         if (result.affectedRows === 0) return res.status(404).json({ success: false, message: "Record not found" });
         res.status(200).json({ success: true, message: "Points updated successfully", updated: point });
     });
-};
+}
 
-exports.removePoints = (req, res) => {
+export function removePoints(req, res) {
     const { id, point } = req.body;
     Info.updatePoints(id, point, false, (err, result) => {
         if (err) return res.status(500).json({ success: false, error: err.message });
         if (result.affectedRows === 0) return res.status(404).json({ success: false, message: "Record not found" });
         res.status(200).json({ success: true, message: "Points deducted successfully", point: point });
     });
-};
+}

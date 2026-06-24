@@ -1,9 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const transactionController = require('../controller/transactionController');
+import { Router } from 'express';
+const router = Router();
+import { saveTransaction, updateTransaction, getTransactions } from '../controller/transactionController.js';
 
-router.post('/save-transaction', transactionController.saveTransaction);
-router.patch('/update-transaction/:md5', transactionController.updateTransaction);
-router.get('/transaction/:userid', transactionController.getTransactions);
+router.post('/save-transaction', saveTransaction);
+router.patch('/update-transaction/:md5', updateTransaction);
+router.get('/transaction/:userid', getTransactions);
 
-module.exports = router;
+export default router;

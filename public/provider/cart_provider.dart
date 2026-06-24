@@ -35,15 +35,19 @@ class CartProvider extends ChangeNotifier {
     try {
       userId ??= await dataProvider.readSecureData('userId');
       if (userId == null) return;
-      
+
       // The DioClient interceptor auto-injects the token here
       final response = await _dio.get('$accounturl/getitem/$userId');
       if (response.statusCode == 200) {
         final cart = CartModel.fromJson(response.data);
         cartItems = cart.data;
-        totalPoints = cartItems.fold(0.0, (sum, item) => sum + (double.tryParse(item.point) ?? 0.0) * item.quantity);
+        totalPoints = cartItems.fold(
+          0.0,
+          (sum, item) =>
+              sum + (double.tryParse(item.point) ?? 0.0) * item.quantity,
+        );
         message = cart.message;
-        
+
         productInvoiceMap.clear();
         for (var item in cartItems) {
           productInvoiceMap[item.product] = item.id;
@@ -118,7 +122,7 @@ class CartProvider extends ChangeNotifier {
     try {
       String? infoId = await dataProvider.readSecureData('infoId');
       if (infoId == null) return;
-      
+
       final response = await _dio.patch(
         '$accounturl/plusinfos',
         data: {'id': infoId, 'point': point},
@@ -148,6 +152,24 @@ class CartProvider extends ChangeNotifier {
     } catch (e) {
       print("Minus point failed: $e");
     } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> ispurchase() async {
+    final userId = await dataProvider.readSecureData('userId');
+    isLoading = true;
+    message = '';
+    if (userId == null) return;
+    try {
+      final result = await _dio.put('$accounturl/ispurchase/$userId');
+      if (result.statusCode == 200) {
+        message = result.data['message'];
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      isLoading = false;
       notifyListeners();
     }
   }

@@ -4,10 +4,10 @@ const app = express();
 const cors = require('cors');
 
 // Import Routes
-const authRoutes = require('./private/routes/authRoutes');
-const profileRoutes = require('./private/routes/profileRoutes');
-const invoiceRoutes = require('./private/routes/invoiceRoutes');
-const transactionRoutes = require('./private/routes/transactionRoutes');
+const authRoutes = require('./private/routes/authRoutes.js').default;
+const profileRoutes = require('./private/routes/profileRoutes.js').default;
+const invoiceRoutes = require('./private/routes/invoiceRoutes.js').default;
+const transactionRoutes = require('./private/routes/transactionRoutes.js').default;
 
 // Improved CORS configuration
 app.use(cors({

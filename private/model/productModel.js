@@ -1,4 +1,4 @@
-const db = require('./db');
+import db from './db.js';
 
 const Product = {
     findById: (id, callback) => {
@@ -7,4 +7,4 @@ const Product = {
     }
 };
 
-module.exports = Product;
+export default Product;

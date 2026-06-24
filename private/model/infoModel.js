@@ -1,4 +1,4 @@
-const db = require('./db');
+import db from './db.js';
 
 const Info = {
     getProfileById: (id, callback) => {
@@ -30,4 +30,4 @@ const Info = {
     }
 };
 
-module.exports = Info;
+export default Info;

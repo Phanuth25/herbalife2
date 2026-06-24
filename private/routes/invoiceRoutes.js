@@ -1,11 +1,12 @@
-const express = require('express');
-const router = express.Router();
-const invoiceController = require('../controller/invoiceController');
-const verifyToken = require('../middleware/auth');
+import { Router } from 'express';
+const router = Router();
+import { getItems, postItem, deleteItem, updateQuantity, markAsPurchasedByUserController } from '../controller/invoiceController.js';
+import verifyToken from '../middleware/auth.js';
 
-router.get('/getitem/:id', invoiceController.getItems);
-router.post('/postitem', invoiceController.postItem);
-router.delete('/deleteitem/:product', verifyToken, invoiceController.deleteItem);
-router.patch('/postquantity', verifyToken, invoiceController.updateQuantity);
+router.get('/getitem/:id', getItems);
+router.post('/postitem', postItem);
+router.delete('/deleteitem/:product', verifyToken, deleteItem);
+router.patch('/postquantity', verifyToken, updateQuantity);
+router.put('/markaspurchased/:userid', verifyToken, markAsPurchasedByUserController);
 
-module.exports = router;
+export default router;
