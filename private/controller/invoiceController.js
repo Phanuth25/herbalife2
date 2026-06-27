@@ -108,8 +108,38 @@ export function markAsPurchasedByUserController(req, res) {
         }
 
         return res.status(200).json({
-            message: "Invoices marked as purchased",
+            message: "successfully",
             updated: result.affectedRows
+        });
+    });
+}
+
+export function selectPurchased(req, res) {
+    const userid = req.params.userid;
+
+    Invoice.selectPurchased(userid, (err, results) => {
+        if (err) {
+            console.error("Database Error:", err.message);
+            return res.status(500).json({
+                success: false,
+                message: "Failed to load purchased items",
+                data: null
+            });
+        }
+
+        if (!Array.isArray(results)) {
+            console.error("Unexpected result shape from selectPurchased:", results);
+            return res.status(500).json({
+                success: false,
+                message: "Failed to load purchased items",
+                data: null
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: results.length > 0 ? "Purchased items loaded" : "No purchased items found",
+            data: results
         });
     });
 }

@@ -1,7 +1,8 @@
-require('dotenv').config({ path: './private/.env' });
-const mysql = require('mysql2');
+import dotenv from 'dotenv';
+dotenv.config({ path: './private/.env' });
+import { createPool } from 'mysql2';
 
-const pool = mysql.createPool({
+const pool = createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
@@ -20,4 +21,4 @@ pool.getConnection((err, connection) => {
   }
 });
 
-module.exports = pool;
+export default pool;

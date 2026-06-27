@@ -37,12 +37,14 @@ export function login(req, res) {
             JWT_SECRET,
             { expiresIn: '15m' }
         );
+        console.log(token);
 
         const refreshtoken = sign(
             { id: user.id, userid: user.userid },
             REFRESH_SECRET,
             { expiresIn: '7d' }
         );
+        console.log(refreshtoken);
 
         User.updateRefreshToken(user.id, refreshtoken, (updErr) => {
             if (updErr) return res.status(500).json({ error: "Failed to save session" });

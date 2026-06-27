@@ -8,7 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:project2/herbalife/public/model/cart_model.dart';
 
 class InvoiceScreen extends StatefulWidget {
-  final List<CartItemModel> items;
+  final List<CartItemModel> items ;
   final double totalPrice;
   final double totalPoint;
   final String billNumber;
@@ -308,9 +308,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       const SizedBox(height: 16),
                       Center(
                         child: Text(
-                          'Thank you for your purchase!',
+                          '...........',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 20,
                             fontStyle: FontStyle.italic,
                             color: Colors.grey.shade500,
                           ),

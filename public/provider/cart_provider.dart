@@ -6,6 +6,8 @@ import 'package:dio/dio.dart';
 import 'package:project2/herbalife/public/provider/profile_provider.dart';
 import 'package:project2/herbalife/public/service/dio_client.dart';
 
+import 'package:project2/herbalife/public/model/invoice_model.dart';
+
 class CartProvider extends ChangeNotifier {
   final SecureStorageProvider dataProvider = SecureStorageProvider();
   final Dio _dio = DioClient.instance;
@@ -14,7 +16,10 @@ class CartProvider extends ChangeNotifier {
   String? userId; // Member ID
   int? invoiceId;
   double totalPoints = 0.0;
+  double totalPoint = 0.0; // for purchased point
+  double totalPrice = 0.0; // for purchased price
   List<CartItemModel> cartItems = [];
+  List<InvoiceItemModel> invoiceItems = [];
   Map<int, int> productInvoiceMap = {};
 
   void saveInvoiceId(int productId, int invoiceId) {
@@ -162,9 +167,43 @@ class CartProvider extends ChangeNotifier {
     message = '';
     if (userId == null) return;
     try {
-      final result = await _dio.put('$accounturl/ispurchase/$userId');
+      final result = await _dio.patch('$accounturl/markaspurchased/$userId');
       if (result.statusCode == 200) {
         message = result.data['message'];
+      } else {
+        message = 'Purchase failed';
+        debugPrint(result.data['message']);
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> selectPurchased() async {
+    message = '';
+    isLoading = true;
+    try {
+      final userId = await dataProvider.readSecureData('userId');
+      if (userId == null) return;
+      final result = await _dio.get('$accounturl/selectpurchased/$userId');
+      if (result.statusCode == 200) {
+        final invoice = InvoiceModel.fromJson(result.data);
+        invoiceItems = invoice.data;
+        message = result.data['message'];
+        totalPoint = invoiceItems.fold(
+          0,
+          (sum, item) => sum + double.parse(item.point),
+        );
+        totalPrice = invoiceItems.fold(
+          0,
+          (sum, item) => sum + double.parse(item.total),
+        );
+      } else {
+        message = 'Purchase failed';
+        debugPrint(result.data['message']);
       }
     } catch (e) {
       debugPrint(e.toString());

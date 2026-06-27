@@ -1,13 +1,16 @@
-require('dotenv').config({ path: './private/.env' });
-const express = require('express');
+import dotenv from 'dotenv';
+dotenv.config({ path: './private/.env' });
+
+import express from 'express';
+import cors from 'cors';
+
 const app = express();
-const cors = require('cors');
 
 // Import Routes
-const authRoutes = require('./private/routes/authRoutes.js').default;
-const profileRoutes = require('./private/routes/profileRoutes.js').default;
-const invoiceRoutes = require('./private/routes/invoiceRoutes.js').default;
-const transactionRoutes = require('./private/routes/transactionRoutes.js').default;
+import authRoutes from './private/routes/authRoutes.js';
+import profileRoutes from './private/routes/profileRoutes.js';
+import invoiceRoutes from './private/routes/invoiceRoutes.js';
+import transactionRoutes from './private/routes/transactionRoutes.js';
 
 // Improved CORS configuration
 app.use(cors({

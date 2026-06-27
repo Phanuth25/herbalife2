@@ -14,7 +14,7 @@ const Invoice = {
                 inv.datetime
             FROM invoices inv
             INNER JOIN products p ON inv.product = p.id
-            WHERE inv.userid = ?
+            WHERE inv.userid = ? AND (inv.ispurchase != 1 OR inv.ispurchase IS NULL)
         `;
         db.query(sql, [userId], callback);
     },
@@ -37,6 +37,11 @@ const Invoice = {
 
     markAsPurchased: (userid, callback) => {
         const sql = "UPDATE invoices SET ispurchase = 1 WHERE userid = ?";
+        db.query(sql, [userid], callback);
+    },
+
+    selectPurchased: (userid,callback) => {
+        const sql = "SELECT * FROM herbalife2.invview where userid = ?";
         db.query(sql, [userid], callback);
     }
 };
