@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:project2/herbalife/public/constants/constants.dart';
 import 'package:project2/herbalife/public/page/payment_screen.dart';
-import 'package:project2/herbalife/public/widget/welcome.dart';
 import 'package:project2/herbalife/public/provider/cart_provider.dart';
 import 'package:project2/herbalife/public/provider/profile_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:project2/herbalife/public/model/invoice_display_model.dart';
 
 import 'invoice_screen.dart';
 
@@ -50,7 +50,7 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final cartProvider = context.watch<CartProvider>();
-    final profileProvider = context.watch<ProfileProvider>();
+    context.watch<ProfileProvider>();
     final double totalPoint = cartProvider.cartItems.fold(
       0,
       (sum, item) => sum + double.parse(item.point),
@@ -73,7 +73,7 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
               height: 260,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF388E3C).withValues(alpha: 0.09),
+                color: const Color(0xFF388E3C).withValues(alpha:0.09),
               ),
             ),
           ),
@@ -85,7 +85,7 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
               height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF81C784).withValues(alpha: 0.11),
+                color: const Color(0xFF81C784).withValues(alpha:0.11),
               ),
             ),
           ),
@@ -116,7 +116,7 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.06),
+                              color: Colors.black.withValues(alpha:0.06),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -157,7 +157,7 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
                                 BoxShadow(
                                   color: const Color(
                                     0xFF1B5E20,
-                                  ).withValues(alpha: 0.25),
+                                  ).withValues(alpha:0.25),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -261,9 +261,7 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(
-                                          alpha: 0.04,
-                                        ),
+                                        color: Colors.black.withValues(alpha:0.04),
                                         blurRadius: 8,
                                         offset: const Offset(0, 3),
                                       ),
@@ -357,10 +355,6 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
                                                 ),
                                                 child: GestureDetector(
                                                   onTap: () async {
-                                                    final double pointToRemove =
-                                                        double.parse(
-                                                          item.point,
-                                                        ); // capture first
                                                     await cartProvider
                                                         .deleteitem(item.id);
                                                   },
@@ -396,7 +390,7 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
                         BoxShadow(
                           color: const Color(
                             0xFF388E3C,
-                          ).withValues(alpha: 0.12),
+                          ).withValues(alpha:0.12),
                           blurRadius: 20,
                           offset: const Offset(0, 6),
                         ),
@@ -498,113 +492,102 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
                           const SizedBox(width: 16),
                           InkWell(
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const Welcome(),
-                                ),
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text(
+                                      'Choose Payment Method',
+                                    ),
+                                    content: const Text(
+                                      'How would you like to pay?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          if (totalPrice != 0) {
+                                            Navigator.push(context, MaterialPageRoute(
+                                              builder: (context) => InvoiceScreen(
+                                                billNumber: "CART-${DateTime.now().millisecondsSinceEpoch}",
+                                                totalPrice: totalPrice,
+                                                totalPoint: totalPoint,
+                                                items: cartProvider.cartItems.map((item) => InvoiceDisplayItem(
+                                                  name: item.name,
+                                                  quantity: item.quantity,
+                                                  point: item.point,
+                                                  total: item.total,
+                                                  isPurchased: false,
+                                                )).toList(),
+                                              ),
+                                            ));
+                                          }
+                                        },
+                                        child: Text(
+                                          'Invoice',
+                                          style: TextStyle(
+                                            color: totalPrice != 0
+                                                ? Colors.green
+                                                : Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          if (totalPrice != 0) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    PaymentScreen(
+                                                      amount: totalPrice,
+                                                      billNumber:
+                                                          generateBillNumber(),
+                                                    ),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                        child: Text(
+                                          'QR Bank',
+                                          style: TextStyle(
+                                            color: totalPrice != 0
+                                                ? Colors.green
+                                                : Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
                               );
                             },
-                            child: InkWell(
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      title: const Text(
-                                        'Choose Payment Method',
-                                      ),
-                                      content: const Text(
-                                        'How would you like to pay?',
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            if (totalPrice != 0) {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      InvoiceScreen(
-                                                        items: cartProvider
-                                                            .cartItems,
-                                                        totalPrice: totalPrice,
-                                                        totalPoint: totalPoint,
-                                                        billNumber:
-                                                            generateBillNumber(),
-                                                      ),
-                                                ),
-                                              );
-                                            }
-                                          },
-                                          child: Text(
-                                            'Invoice',
-                                            style: TextStyle(
-                                              color: totalPrice != 0
-                                                  ? Colors.green
-                                                  : Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                        TextButton(
-                                          //here
-                                          onPressed: () {
-                                            if (totalPrice != 0) {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      PaymentScreen(
-                                                        amount: totalPrice,
-                                                        billNumber:
-                                                            generateBillNumber(),
-                                                      ),
-                                                ),
-                                              );
-                                            }
-                                          },
-                                          child: Text(
-                                            'QR Bank',
-                                            style: TextStyle(
-                                              color: totalPrice != 0
-                                                  ? Colors.green
-                                                  : Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
-                              child: Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Color(0xFF2E7D32),
-                                      Color(0xFF43A047),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(
-                                        0xFF2E7D32,
-                                      ).withValues(alpha: 0.30),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
+                            child: Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF2E7D32),
+                                    Color(0xFF43A047),
                                   ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
-                                child: const Icon(
-                                  Icons.shopping_basket_rounded,
-                                  color: Colors.white,
-                                  size: 26,
-                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFF2E7D32,
+                                    ).withValues(alpha:0.30),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.shopping_basket_rounded,
+                                color: Colors.white,
+                                size: 26,
                               ),
                             ),
                           ),

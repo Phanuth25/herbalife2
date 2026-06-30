@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:project2/herbalife/public/provider/profile_provider.dart';
 import 'package:project2/herbalife/public/provider/khqr_provider.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +7,9 @@ import 'package:project2/herbalife/public/provider/cart_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../data/notifier.dart';
+import '../model/invoice_display_model.dart';
 import '../widget/button.dart';
+import 'invoice_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
   final double amount;
@@ -36,8 +37,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
     _setup();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-
-      context.read<CartProvider>().selectPurchased();
     });
   }
 
@@ -55,8 +54,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
     // Don't start timers if generation failed
     if (khqr.qrString == null) return;
 
-    // Poll every 3 seconds (Fixed: was 300 seconds)
-    _pollingTimer = Timer.periodic(const Duration(seconds: 500), (_) async {
+    // Poll every 3 seconds
+    _pollingTimer = Timer.periodic(const Duration(seconds: 300), (_) async {
       await khqr.checkPayment();
       if (khqr.isPaid) {
         _pollingTimer?.cancel();
@@ -83,7 +82,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
   @override
   Widget build(BuildContext context) {
     final khqr = context.watch<KhqrProvider>();
-    final cart = context.watch<CartProvider>();
     return Scaffold(
       appBar: AppBar(title: const Text('Scan to Pay')),
       body: Center(
@@ -96,6 +94,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Widget _buildBody(KhqrProvider khqr) {
+    // FIX: Use .read() inside the callback to avoid crash
+    final cartProvider = context.watch<CartProvider>();
     // Generating QR or checking payment
     if (khqr.isLoading) {
       return const CircularProgressIndicator();
@@ -158,10 +158,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       children: [
         Text(
           '\$${widget.amount.toStringAsFixed(2)}',
-          style: Theme
-              .of(context)
-              .textTheme
-              .headlineMedium,
+          style: Theme.of(context).textTheme.headlineMedium,
         ),
         const SizedBox(height: 8),
         const Text('Open your Bakong app and scan'),
@@ -189,90 +186,108 @@ class _PaymentScreenState extends State<PaymentScreen> {
             // Prevent duplicate clicks if already processing
             if (isPurchcase.value == true) return;
 
-            final cart = context.read<CartProvider>();
             isPurchcase.value = true;
 
-            await cart.ispurchase();
+            await cartProvider.ispurchase();
             if (!mounted) return;
-              if (cart.message == 'successfully') {
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+            if (cartProvider.message == 'successfully') {
+              context.read<CartProvider>().selectPurchased();
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext dialogContext) {
+                  return AlertDialog(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    title: const Text(
+                      "Purchase Successful!",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
-                      title: const Text(
-                        "Purchase Successful!",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                    ),
+                    actions: [
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
                         ),
-                      ),
-                      actions: [
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            isPurchcase.value = false;
-                          },
-                          child:  Text("Continue"),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              } else {
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      title: const Text(
-                        "Purchase Failed",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      content: Text(
-                        cart.message ??
-                            "Something went wrong. Please try again.",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            isPurchcase.value =
-                            false; // Fix: reset state on failure
-                          },
-                          child: const Text("Try Again"),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              }
+                        onPressed: () {
 
+                          isPurchcase.value = false;
+                          Navigator.pop(dialogContext); // Close dialog
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => InvoiceScreen(
+                                billNumber:
+                                    "CART-${DateTime.now().millisecondsSinceEpoch}",
+                                totalPrice: cartProvider.totalPrice,
+                                totalPoint: cartProvider.totalPoint,
+                                items: cartProvider.invoiceItems
+                                    .map(
+                                      (item) => InvoiceDisplayItem(
+                                        name: item.name,
+                                        quantity: item.quantity,
+                                        point: item.point,
+                                        total: item.total,
+                                        isPurchased: true,
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ),
+                          );
+                        },
+                        child: const Text("See the invoice"),
+                      ),
+                    ],
+                  );
+                },
+              );
+            } else {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    title: const Text(
+                      "Purchase Failed",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    content: Text(
+                      cartProvider.message ?? "Something went wrong. Please try again.",
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                    actions: [
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          isPurchcase.value =
+                              false; // Fix: reset state on failure
+                        },
+                        child: const Text("Try Again"),
+                      ),
+                    ],
+                  );
+                },
+              );
+            }
           },
           child: ValueListenableBuilder<bool>(
             valueListenable: isPurchcase,

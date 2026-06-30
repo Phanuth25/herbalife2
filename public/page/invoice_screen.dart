@@ -4,14 +4,15 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:share_plus/share_plus.dart';
-
-import 'package:project2/herbalife/public/model/cart_model.dart';
+import 'package:project2/herbalife/public/model/invoice_display_model.dart';
+import 'package:project2/main.dart';
 
 class InvoiceScreen extends StatefulWidget {
-  final List<CartItemModel> items ;
+  final List<InvoiceDisplayItem> items;
   final double totalPrice;
   final double totalPoint;
   final String billNumber;
+  final bool showHomeButton;
 
   const InvoiceScreen({
     super.key,
@@ -19,6 +20,7 @@ class InvoiceScreen extends StatefulWidget {
     required this.totalPrice,
     required this.totalPoint,
     required this.billNumber,
+    this.showHomeButton = false,
   });
 
   @override
@@ -36,8 +38,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       await Future.delayed(const Duration(milliseconds: 50));
 
       final boundary =
-          _invoiceKey.currentContext!.findRenderObject()
-              as RenderRepaintBoundary;
+          _invoiceKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
       final ByteData? byteData = await image.toByteData(
         format: ui.ImageByteFormat.png,
@@ -66,13 +67,14 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
     final dateStr =
         '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}';
+    final bool isPurchased = widget.items.isNotEmpty && widget.items.first.isPurchased;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F8F1),
       appBar: AppBar(
+        automaticallyImplyLeading: widget.showHomeButton ? false : true,
         title: const Text('Invoice'),
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
@@ -94,7 +96,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
+                        color: Colors.black.withOpacity(0.06),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -142,6 +144,28 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
+
+                      // Status Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isPurchased ? Colors.green.shade50 : Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isPurchased ? Colors.green.shade200 : Colors.orange.shade200,
+                          ),
+                        ),
+                        child: Text(
+                          isPurchased ? 'PURCHASED' : 'PENDING',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: isPurchased ? Colors.green.shade700 : Colors.orange.shade700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
                       Divider(color: Colors.grey.shade200, thickness: 1),
                       const SizedBox(height: 12),
 
@@ -209,8 +233,8 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                               Expanded(
                                 flex: 3,
                                 child: Text(
-                                  'Product #${item.name}',
-                                  style: TextStyle(
+                                  item.name,
+                                  style: const TextStyle(
                                     fontFamily: 'KhmerFont',
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
@@ -322,40 +346,64 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
               ),
 
               const SizedBox(height: 24),
-
-              // ── Screenshot / Share button ───────────────────────
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: _isCapturing ? null : _captureAndShare,
-                  icon: _isCapturing
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.camera_alt_rounded),
-                  label: Text(
-                    _isCapturing ? 'Capturing...' : 'Screenshot & Share',
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2E7D32),
-                    foregroundColor: Colors.white,
+              _buildShareButton(),
+              if (widget.showHomeButton) ...[
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const Main()),
+                      (route) => false,
+                    );
+                  },
+                  icon: const Icon(Icons.home),
+                  label: const Text("Back to Home"),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF1B5E20),
+                    side: const BorderSide(color: Color(0xFF1B5E20)),
+                    minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShareButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: ElevatedButton.icon(
+        onPressed: _isCapturing ? null : _captureAndShare,
+        icon: _isCapturing
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Icon(Icons.camera_alt_rounded),
+        label: Text(
+          _isCapturing ? 'Capturing...' : 'Screenshot & Share',
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF2E7D32),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
