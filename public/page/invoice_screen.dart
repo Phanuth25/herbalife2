@@ -74,7 +74,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F8F1),
       appBar: AppBar(
-        automaticallyImplyLeading: widget.showHomeButton ? false : true,
+        automaticallyImplyLeading: widget.showHomeButton ? true : false,
         title: const Text('Invoice'),
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
@@ -347,7 +347,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
 
               const SizedBox(height: 24),
               _buildShareButton(),
-              if (widget.showHomeButton) ...[
+              if (widget.showHomeButton == true) ...[
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: () {

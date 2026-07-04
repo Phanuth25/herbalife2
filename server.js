@@ -3,7 +3,6 @@ dotenv.config({ path: './private/.env' });
 
 import express from 'express';
 import cors from 'cors';
-
 const app = express();
 
 // Import Routes
@@ -11,6 +10,8 @@ import authRoutes from './private/routes/authRoutes.js';
 import profileRoutes from './private/routes/profileRoutes.js';
 import invoiceRoutes from './private/routes/invoiceRoutes.js';
 import transactionRoutes from './private/routes/transactionRoutes.js';
+
+const PORT = process.env.PORT || 3000;
 
 // Improved CORS configuration
 app.use(cors({
@@ -27,4 +28,4 @@ app.use('/api', profileRoutes);
 app.use('/api', invoiceRoutes);
 app.use('/api', transactionRoutes);
 
-app.listen(3000, () => console.log('Server started on port 3000'));
+app.listen(PORT, () => console.log('Server started on port 3000'));

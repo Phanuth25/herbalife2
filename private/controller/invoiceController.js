@@ -3,8 +3,8 @@ import Product from '../model/productModel.js';
 import db from '../model/db.js';
 
 export function getItems(req, res) {
-    const userId = req.params.id;
-    Invoice.getByUserId(userId, (err, results) => {
+    const { userid } = req.params;
+    Invoice.getByUserId(userid, (err, results) => {
         if (err) {
             console.error("Database Error:", err.message);
             return res.status(500).json({ error: err.message });
@@ -92,19 +92,19 @@ export function updateQuantity(req, res) {
     });
 }
 
-export function markAsPurchasedByUserController(req, res) {
-    const userid = req.params.userid;
-    if (!userid) {
-        return res.status(400).json({ message: "User ID is required" });
+export function markAsPurchasedController(req, res) {
+    const { invoiceIds } = req.body;
+    if (!invoiceIds || !Array.isArray(invoiceIds) || invoiceIds.length === 0) {
+        return res.status(400).json({ message: "Invoice IDs are required" });
     }
 
-    Invoice.markAsPurchased(userid, (err, result) => {
+    Invoice.markAsPurchased(invoiceIds, (err, result) => {
         if (err) {
             return res.status(500).json({ error: err.message });
         }
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "No unpurchased invoices found for this user" });
+            return res.status(404).json({ message: "No invoices found to update" });
         }
 
         return res.status(200).json({
@@ -115,9 +115,11 @@ export function markAsPurchasedByUserController(req, res) {
 }
 
 export function selectPurchased(req, res) {
-    const userid = req.params.userid;
-
-    Invoice.selectPurchased(userid, (err, results) => {
+            const { invoiceIds } = req.body;
+            if (!invoiceIds || !Array.isArray(invoiceIds) || invoiceIds.length === 0) {
+                return res.status(400).json({ message: "Invoice IDs are required" });
+            }
+    Invoice.selectPurchased(invoiceIds, (err, results) => {
         if (err) {
             console.error("Database Error:", err.message);
             return res.status(500).json({

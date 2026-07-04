@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:project2/herbalife/public/provider/data_provider.dart';
@@ -36,7 +35,9 @@ class Authprovider extends ChangeNotifier {
       if (response.statusCode == 200) {
         message = data['message'];
         userToken = data['token'];
+        debugPrint('user token: $userToken');
         refreshToken = data['refreshToken'] ?? data['refreshtoken'];
+        debugPrint('refresh token: $refreshToken');
         infoId = data['infoId']?.toString();
 
         // Save to secure storage

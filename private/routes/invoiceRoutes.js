@@ -5,16 +5,16 @@ import {
     postItem, 
     deleteItem, 
     updateQuantity, 
-    markAsPurchasedByUserController, 
+    markAsPurchasedController, 
     selectPurchased 
 } from '../controller/invoiceController.js';
 import verifyToken from '../middleware/auth.js';
 
-router.get('/getitem/:id', getItems);
+router.get('/getitem/:userid', getItems);
 router.post('/postitem', postItem);
 router.delete('/deleteitem/:product', verifyToken, deleteItem);
 router.patch('/postquantity', verifyToken, updateQuantity);
-router.patch('/markaspurchased/:userid', verifyToken, markAsPurchasedByUserController);
-router.get('/selectpurchased/:userid', verifyToken, selectPurchased);
+router.patch('/markaspurchased', verifyToken, markAsPurchasedController);
+router.get('/selectpurchased', selectPurchased);
 
 export default router;

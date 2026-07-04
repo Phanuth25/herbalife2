@@ -223,6 +223,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => InvoiceScreen(
+                                showHomeButton: true,
                                 billNumber:
                                     "CART-${DateTime.now().millisecondsSinceEpoch}",
                                 totalPrice: cartProvider.totalPrice,

@@ -13,13 +13,14 @@ class CartProvider extends ChangeNotifier {
   final Dio _dio = DioClient.instance;
   String? message;
   bool isLoading = false;
-  String? userId; // Member ID
   int? invoiceId;
+  String? userId;
   double totalPoints = 0.0;
   double totalPoint = 0.0; // for purchased point
   double totalPrice = 0.0; // for purchased price
   List<CartItemModel> cartItems = [];
   List<InvoiceItemModel> invoiceItems = [];
+  List<int> activeInvoiceIds = [];
   Map<int, int> productInvoiceMap = {};
 
   void saveInvoiceId(int productId, int invoiceId) {
@@ -48,8 +49,8 @@ class CartProvider extends ChangeNotifier {
         cartItems = cart.data;
         totalPoints = cartItems.fold(
           0.0,
-          (sum, item) =>
-              sum + (double.tryParse(item.point) ?? 0.0) * item.quantity,
+              (sum, item) =>
+          sum + (double.tryParse(item.point) ?? 0.0) * item.quantity,
         );
         message = cart.message;
 
@@ -77,15 +78,23 @@ class CartProvider extends ChangeNotifier {
       // Clean call: DioClient takes care of authorization headers behind the scenes
       final response = await _dio.post(
         "$accounturl/postitem",
-        data: {'userid': userid, 'product': product, 'quantity': quantity},
+        data: {
+          'userid': userid,
+          'product': product,
+          'quantity': quantity,
+        },
       );
       if (response.statusCode == 200) {
+        await fetchCartItems(); // Triggers items reload and forces green border
         message = response.data['message'];
         invoiceId = response.data['invoiceId'];
         if (invoiceId != null) {
           saveInvoiceId(product, invoiceId!);
+          if (!activeInvoiceIds.contains(invoiceId)) {
+            activeInvoiceIds.add(invoiceId!);
+          }
         }
-        await fetchCartItems(); // Triggers items reload and forces green border
+
       }
     } catch (e) {
       message = "Network failed: $e";
@@ -104,7 +113,7 @@ class CartProvider extends ChangeNotifier {
         await fetchCartItems();
       }
     } catch (e) {
-      print("Update quantity failed: $e");
+      debugPrint("Update quantity failed: $e");
     } finally {
       notifyListeners();
     }
@@ -117,7 +126,7 @@ class CartProvider extends ChangeNotifier {
         await fetchCartItems();
       }
     } catch (e) {
-      print("Delete item failed: $e");
+      debugPrint("Delete item failed: $e");
     } finally {
       notifyListeners();
     }
@@ -136,7 +145,7 @@ class CartProvider extends ChangeNotifier {
         await profileProvider.getProfile();
       }
     } catch (e) {
-      print("Plus point failed: $e");
+      debugPrint("Plus point failed: $e");
     } finally {
       notifyListeners();
     }
@@ -155,19 +164,22 @@ class CartProvider extends ChangeNotifier {
         await profileProvider.getProfile();
       }
     } catch (e) {
-      print("Minus point failed: $e");
+      debugPrint("Minus point failed: $e");
     } finally {
       notifyListeners();
     }
   }
 
   Future<void> ispurchase() async {
-    final userId = await dataProvider.readSecureData('userId');
+    if (activeInvoiceIds.isEmpty) return;
+    debugPrint('activeInvoiceIds: $activeInvoiceIds');
     isLoading = true;
     message = '';
-    if (userId == null) return;
     try {
-      final result = await _dio.patch('$accounturl/markaspurchased/$userId');
+      final result = await _dio.patch(
+        '$accounturl/markaspurchased',
+        data: {'invoiceIds': activeInvoiceIds},
+      );
       if (result.statusCode == 200) {
         message = result.data['message'];
       } else {
@@ -183,12 +195,15 @@ class CartProvider extends ChangeNotifier {
   }
 
   Future<void> selectPurchased() async {
+    if (activeInvoiceIds.isEmpty) return;
+
     message = '';
     isLoading = true;
     try {
-      final userId = await dataProvider.readSecureData('userId');
-      if (userId == null) return;
-      final result = await _dio.get('$accounturl/selectpurchased/$userId');
+      final result = await _dio.get(
+        '$accounturl/selectpurchased',
+        data: {'invoiceIds': activeInvoiceIds},
+      );
       if (result.statusCode == 200) {
         final invoice = InvoiceModel.fromJson(result.data);
         invoiceItems = invoice.data;
@@ -201,6 +216,7 @@ class CartProvider extends ChangeNotifier {
           0,
           (sum, item) => sum + double.parse(item.total),
         );
+        activeInvoiceIds.clear();
       } else {
         message = 'Purchase failed';
         debugPrint(result.data['message']);
