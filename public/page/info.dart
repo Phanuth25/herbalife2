@@ -92,13 +92,25 @@ class _InfoState extends State<Info> with SingleTickerProviderStateMixin {
     final profileImage = _buildProfileImage(imageUrl);
     final showFallbackIcon = profileImage == null;
 
+    // Responsive sizing
+    final size = MediaQuery.of(context).size;
+    final screenWidth = size.width;
+    final isWideScreen = screenWidth > 600;
+    final contentWidth = screenWidth > 500 ? 500.0 : screenWidth;
+    
+    // Dynamic Avatar size
+    final double avatarSize = (screenWidth * 0.4).clamp(140.0, 200.0);
+    // Dynamic Padding
+    final double horizontalPadding = (screenWidth * 0.06).clamp(16.0, 32.0);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF1F8F1),
       body: Stack(
         children: [
+          // Scalable decorative circles
           Positioned(
             top: -80,
-            left: -60,
+            left: screenWidth > 800 ? screenWidth / 2 - 400 : -60,
             child: Container(
               width: 280,
               height: 280,
@@ -110,7 +122,7 @@ class _InfoState extends State<Info> with SingleTickerProviderStateMixin {
           ),
           Positioned(
             top: -40,
-            right: -80,
+            right: screenWidth > 800 ? screenWidth / 2 - 350 : -80,
             child: Container(
               width: 220,
               height: 220,
@@ -122,7 +134,7 @@ class _InfoState extends State<Info> with SingleTickerProviderStateMixin {
           ),
           Positioned(
             bottom: -60,
-            right: -40,
+            right: screenWidth > 800 ? screenWidth / 2 - 300 : -40,
             child: Container(
               width: 200,
               height: 200,
@@ -133,221 +145,227 @@ class _InfoState extends State<Info> with SingleTickerProviderStateMixin {
             ),
           ),
           SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Herbalife",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w800,
-                          color: kPrimaryGreen,
-                          fontSize: 22,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF388E3C).withValues(alpha: 0.12),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.stars_rounded, size: 16, color: Color(0xFF43A047)),
-                            const SizedBox(width: 6),
-                            Text(
-                              "${profileProvider.ispoint}pt",
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1B5E20)),
-                            ),
-                            Container(margin: const EdgeInsets.symmetric(horizontal: 8), width: 1, height: 14, color: const Color(0xFFDCEEDC)),
-                            const Icon(Icons.local_offer_rounded, size: 15, color: Color(0xFF43A047)),
-                            const SizedBox(width: 4),
-                            Text(
-                              "${profileProvider.isdiscount}% off",
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1B5E20)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: profileProvider.isLoading
-                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF43A047), strokeWidth: 2.5))
-                      : FadeTransition(
-                          opacity: _fadeAnim ?? const AlwaysStoppedAnimation(1.0),
-                          child: SlideTransition(
-                            position: _slideAnim ?? const AlwaysStoppedAnimation(Offset.zero),
-                            child: SingleChildScrollView(
-                              physics: const BouncingScrollPhysics(),
-                              padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-                              child: Column(
-                                children: [
-                                  Center(
-                                    child: GestureDetector(
-                                      onTap: _pickPhoto,
-                                      child: Stack(
-                                        alignment: Alignment.bottomRight,
-                                        children: [
-                                          Container(
-                                            width: 180,
-                                            height: 180,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: const Color(0xFFE8F5E9),
-                                              border: Border.all(color: kPrimaryGreen.withValues(alpha: 0.3), width: 3),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: const Color(0xFF388E3C).withValues(alpha: 0.15),
-                                                  blurRadius: 12,
-                                                  offset: const Offset(0, 4),
-                                                ),
-                                              ],
-                                              image: profileImage,
-                                            ),
-                                            child: showFallbackIcon
-                                                ? Center(child: Icon(Icons.person_rounded, size: 42, color: kPrimaryGreen.withValues(alpha: 0.5)))
-                                                : null,
-                                          ),
-                                          Container(
-                                            padding: const EdgeInsets.all(6),
-                                            decoration: BoxDecoration(
-                                              color: kPrimaryGreen,
-                                              shape: BoxShape.circle,
-                                              border: Border.all(color: Colors.white, width: 2),
-                                            ),
-                                            child: const Icon(Icons.camera_alt_rounded, size: 20, color: Colors.white),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: RichText(
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(text: 'Hello, ', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500, color: Colors.grey.shade600)),
-                                          TextSpan(text: '${profileProvider.isname}!', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF1B5E20), fontFamily: 'KhmerFont')),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  if (profileProvider.message != null && profileProvider.message!.isNotEmpty)
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 10),
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                      decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.green.shade200)),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.check_circle_outline, color: Colors.green.shade400, size: 18),
-                                          const SizedBox(width: 8),
-                                          Expanded(child: Text(profileProvider.message!, style: TextStyle(color: Colors.green.shade600, fontSize: 13))),
-                                        ],
-                                      ),
-                                    ),
-                                  const SizedBox(height: 20),
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(24),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFF388E3C).withValues(alpha: 0.10),
-                                          blurRadius: 24,
-                                          offset: const Offset(0, 8),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Container(width: 5, height: 28, decoration: BoxDecoration(color: kPrimaryGreen, borderRadius: BorderRadius.circular(4))),
-                                            const SizedBox(width: 10),
-                                            const Text('Profile Details', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1B5E20), letterSpacing: -0.3)),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 18),
-                                        _buildInfoRow(icon: Icons.location_on_outlined, label: 'Address', value: profileProvider.isaddress),
-                                        const SizedBox(height: 14),
-                                        _buildInfoRow(icon: Icons.phone_outlined, label: 'Phone', value: '0${profileProvider.isphone}'),
-                                        const SizedBox(height: 14),
-                                        _buildInfoRow(icon: Icons.mail_outline_rounded, label: 'Email', value: profileProvider.isemail),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 52,
-                                    child: ElevatedButton(
-                                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const Product())),
-                                      style: ElevatedButton.styleFrom(backgroundColor: kPrimaryGreen, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text('Continue', style: kTitleStyle.copyWith(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w700)),
-                                          const SizedBox(width: 8),
-                                          const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 52,
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            title: const Text('Log out'),
-                                            content: const Text('Are you sure you want to log out?'),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () {
-                                                  dataProvider.clearSecureData();
-                                                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const Login()), (route) => false);
-                                                },
-                                                child: const Text('Yes'),
-                                              ),
-                                              TextButton(onPressed: () => Navigator.pop(context), child: const Text('No')),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                      style: ElevatedButton.styleFrom(backgroundColor: kPrimaryGreen, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-                                      child: Text("Log out", style: kTitleStyle.copyWith(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w700)),
-                                    ),
-                                  ),
-                                ],
-                              ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 500),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(horizontalPadding, 12, horizontalPadding, 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Herbalife",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: kPrimaryGreen,
+                              fontSize: 22,
+                              letterSpacing: -0.5,
                             ),
                           ),
-                        ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF388E3C).withValues(alpha: 0.12),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.stars_rounded, size: 16, color: Color(0xFF43A047)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "${profileProvider.ispoint}pt",
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1B5E20)),
+                                ),
+                                Container(margin: const EdgeInsets.symmetric(horizontal: 8), width: 1, height: 14, color: const Color(0xFFDCEEDC)),
+                                const Icon(Icons.local_offer_rounded, size: 15, color: Color(0xFF43A047)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "${profileProvider.isdiscount}% off",
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1B5E20)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: profileProvider.isLoading
+                          ? const Center(child: CircularProgressIndicator(color: Color(0xFF43A047), strokeWidth: 2.5))
+                          : FadeTransition(
+                              opacity: _fadeAnim ?? const AlwaysStoppedAnimation(1.0),
+                              child: SlideTransition(
+                                position: _slideAnim ?? const AlwaysStoppedAnimation(Offset.zero),
+                                child: SingleChildScrollView(
+                                  physics: const BouncingScrollPhysics(),
+                                  padding: EdgeInsets.fromLTRB(horizontalPadding, 8, horizontalPadding, 32),
+                                  child: Column(
+                                    children: [
+                                      Center(
+                                        child: GestureDetector(
+                                          onTap: _pickPhoto,
+                                          child: Stack(
+                                            alignment: Alignment.bottomRight,
+                                            children: [
+                                              Container(
+                                                width: avatarSize,
+                                                height: avatarSize,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  color: const Color(0xFFE8F5E9),
+                                                  border: Border.all(color: kPrimaryGreen.withValues(alpha: 0.3), width: 3),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: const Color(0xFF388E3C).withValues(alpha: 0.15),
+                                                      blurRadius: 12,
+                                                      offset: const Offset(0, 4),
+                                                    ),
+                                                  ],
+                                                  image: profileImage,
+                                                ),
+                                                child: showFallbackIcon
+                                                    ? Center(child: Icon(Icons.person_rounded, size: avatarSize * 0.25, color: kPrimaryGreen.withValues(alpha: 0.5)))
+                                                    : null,
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.all(6),
+                                                decoration: BoxDecoration(
+                                                  color: kPrimaryGreen,
+                                                  shape: BoxShape.circle,
+                                                  border: Border.all(color: Colors.white, width: 2),
+                                                ),
+                                                child: Icon(Icons.camera_alt_rounded, size: (avatarSize * 0.12).clamp(16.0, 24.0), color: Colors.white),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      Align(
+                                        alignment: isWideScreen ? Alignment.center : Alignment.centerLeft,
+                                        child: RichText(
+                                          textAlign: isWideScreen ? TextAlign.center : TextAlign.left,
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(text: 'Hello, ', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500, color: Colors.grey.shade600)),
+                                              TextSpan(text: '${profileProvider.isname}!', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Color(0xFF1B5E20), fontFamily: 'KhmerFont')),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      if (profileProvider.message != null && profileProvider.message!.isNotEmpty)
+                                        Container(
+                                          margin: const EdgeInsets.only(top: 10),
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                          decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.green.shade200)),
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.check_circle_outline, color: Colors.green.shade400, size: 18),
+                                              const SizedBox(width: 8),
+                                              Expanded(child: Text(profileProvider.message!, style: TextStyle(color: Colors.green.shade600, fontSize: 13))),
+                                            ],
+                                          ),
+                                        ),
+                                      const SizedBox(height: 20),
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(24),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF388E3C).withValues(alpha: 0.10),
+                                              blurRadius: 24,
+                                              offset: const Offset(0, 8),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Container(width: 5, height: 28, decoration: BoxDecoration(color: kPrimaryGreen, borderRadius: BorderRadius.circular(4))),
+                                                const SizedBox(width: 10),
+                                                const Text('Profile Details', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1B5E20), letterSpacing: -0.3)),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 18),
+                                            _buildInfoRow(icon: Icons.location_on_outlined, label: 'Address', value: profileProvider.isaddress),
+                                            const SizedBox(height: 14),
+                                            _buildInfoRow(icon: Icons.phone_outlined, label: 'Phone', value: '0${profileProvider.isphone}'),
+                                            const SizedBox(height: 14),
+                                            _buildInfoRow(icon: Icons.mail_outline_rounded, label: 'Email', value: profileProvider.isemail),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        height: 52,
+                                        child: ElevatedButton(
+                                          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const Product())),
+                                          style: ElevatedButton.styleFrom(backgroundColor: kPrimaryGreen, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Text('Continue', style: kTitleStyle.copyWith(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w700)),
+                                              const SizedBox(width: 8),
+                                              const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        height: 52,
+                                        child: ElevatedButton(
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (context) => AlertDialog(
+                                                title: const Text('Log out'),
+                                                content: const Text('Are you sure you want to log out?'),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      dataProvider.clearSecureData();
+                                                      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const Login()), (route) => false);
+                                                    },
+                                                    child: const Text('Yes'),
+                                                  ),
+                                                  TextButton(onPressed: () => Navigator.pop(context), child: const Text('No')),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                          style: ElevatedButton.styleFrom(backgroundColor: kPrimaryGreen, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                                          child: Text("Log out", style: kTitleStyle.copyWith(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w700)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],
@@ -363,13 +381,15 @@ class _InfoState extends State<Info> with SingleTickerProviderStateMixin {
         children: [
           Icon(icon, size: 20, color: const Color(0xFF43A047)),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF81C784), letterSpacing: 0.5)),
-              const SizedBox(height: 2),
-              Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1B5E20))),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF81C784), letterSpacing: 0.5)),
+                const SizedBox(height: 2),
+                Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1B5E20)), overflow: TextOverflow.ellipsis),
+              ],
+            ),
           ),
         ],
       ),
