@@ -25,6 +25,7 @@ class ProfileProvider extends ChangeNotifier {
   String? totalAmount;
   String? userId; // Store as String (Member ID)
   String? id; // Store as String (Database Primary Key)
+  String? role;
 
   String get isemail => email ?? "No data";
   String get isphone => phone ?? "No data";
@@ -55,6 +56,7 @@ class ProfileProvider extends ChangeNotifier {
         position = data['position']?.toString();
         discount = data['discount']?.toString();
         photo = data['photo'];
+        role = data['role'];
       } else {
         message = data['message'] ?? "Failed to load profile";
       }

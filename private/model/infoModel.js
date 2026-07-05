@@ -3,7 +3,7 @@ import db from './db.js';
 const Info = {
     getProfileById: (id, callback) => {
         const sql = `
-            SELECT i.id, i.name, i.address, i.phone, i.email, i.point, i.photo, p.position, p.discount 
+            SELECT i.id, i.name, i.address, i.phone, i.email, i.point, i.photo, p.position, p.discount , u.role
             FROM users u 
             INNER JOIN infos i ON u.userids = i.id 
             INNER JOIN positions p ON p.id = i.position  

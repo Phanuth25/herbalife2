@@ -22,7 +22,8 @@ export function getProfile(req, res) {
             name: info.name || "No Name",
             position: info.position || "No Position",
             discount: info.discount || "No Discount",
-            photo: info.photo || "No Photo"
+            photo: info.photo || "No Photo",
+            role: info.role || "No Role"
         });
     });
 }
