@@ -1,4 +1,7 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:project2/herbalife/public/constants/constants.dart';
 import 'package:project2/herbalife/public/page/info.dart';
 import 'package:project2/herbalife/public/provider/auth_provider.dart';
@@ -6,13 +9,11 @@ import 'package:project2/herbalife/public/provider/cart_provider.dart';
 import 'package:project2/herbalife/public/provider/profile_provider.dart';
 import 'package:project2/herbalife/public/provider/product_provider.dart';
 import 'package:project2/herbalife/public/widget/item.dart';
-import 'package:project2/herbalife/public/page/cart.dart';
 import 'package:provider/provider.dart';
 
 class Admin extends StatefulWidget {
-  final bool isadmin;
-
-  Admin({super.key, required this.isadmin});
+  final bool isclick;
+  const Admin({super.key, this.isclick = false});
 
   @override
   State<Admin> createState() => _AdminState();
@@ -22,6 +23,12 @@ class _AdminState extends State<Admin> with TickerProviderStateMixin {
   bool isSelected = false;
   String searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
+
+  // Admin Form Controllers
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _pointController = TextEditingController();
+  XFile? _imageFile;
 
   final GlobalKey cartKey = GlobalKey();
   List<GlobalKey> itemKeys = [];
@@ -39,7 +46,58 @@ class _AdminState extends State<Admin> with TickerProviderStateMixin {
   @override
   void dispose() {
     _searchController.dispose();
+    _nameController.dispose();
+    _priceController.dispose();
+    _pointController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _imageFile = image;
+      });
+    }
+  }
+
+  Future<void> _submitProduct() async {
+    final productProvider = context.read<ProductProvider>();
+    if (_nameController.text.isEmpty ||
+        _priceController.text.isEmpty ||
+        _pointController.text.isEmpty ||
+        _imageFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields and select an image')),
+      );
+      return;
+    }
+
+    final success = await productProvider.createProduct(
+      name: _nameController.text,
+      price: _priceController.text,
+      point: _pointController.text,
+      imageFile: _imageFile!,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      _nameController.clear();
+      _priceController.clear();
+      _pointController.clear();
+      setState(() {
+        _imageFile = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Product created successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(productProvider.message ?? 'Failed to create product')),
+      );
+    }
   }
 
   @override
@@ -49,7 +107,6 @@ class _AdminState extends State<Admin> with TickerProviderStateMixin {
     final profileProvider = context.watch<ProfileProvider>();
     final productProvider = context.watch<ProductProvider>();
 
-    final double totalPoint = cartProvider.totalPoints;
     final int totalQty = cartProvider.cartItems.fold(
       0,
       (sum, item) => sum + item.quantity,
@@ -200,120 +257,6 @@ class _AdminState extends State<Admin> with TickerProviderStateMixin {
                     ),
 
                     Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                        vertical: 10,
-                      ),
-                      child: GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const Cart()),
-                        ),
-                        child: Container(
-                          width: double.infinity,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF2E7D32), Color(0xFF43A047)],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(
-                                  0xFF2E7D32,
-                                ).withValues(alpha: 0.30),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              const SizedBox(width: 18),
-                              SizedBox(
-                                width: 46,
-                                height: 46,
-                                child: Stack(
-                                  key: cartKey,
-                                  children: [
-                                    const Positioned(
-                                      top: 4,
-                                      left: 0,
-                                      child: Icon(
-                                        Icons.shopping_cart_rounded,
-                                        color: Colors.white,
-                                        size: 30,
-                                      ),
-                                    ),
-                                    Positioned(
-                                      left: 18,
-                                      top: 0,
-                                      child: Container(
-                                        width: 20,
-                                        height: 20,
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: const Color(0xFF43A047),
-                                            width: 1.5,
-                                          ),
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          '$totalQty',
-                                          style: const TextStyle(
-                                            color: Color(0xFF2E7D32),
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    "My Cart",
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  Text(
-                                    "Points: ${totalPoint.toStringAsFixed(2)}",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Spacer(),
-                              const Padding(
-                                padding: EdgeInsets.only(right: 18),
-                                child: Icon(
-                                  Icons.arrow_forward_ios_rounded,
-                                  color: Colors.white70,
-                                  size: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Padding(
                       padding: EdgeInsets.fromLTRB(
                         horizontalPadding,
                         0,
@@ -352,63 +295,79 @@ class _AdminState extends State<Admin> with TickerProviderStateMixin {
                                 color: kPrimaryGreen,
                               ),
                             )
-                          : filteredProducts.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.search_off_rounded,
-                                    size: 56,
-                                    color: Colors.grey.shade300,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    "No products found",
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      color: Colors.grey.shade400,
-                                      fontWeight: FontWeight.w500,
+                          : CustomScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              slivers: [
+                                if (filteredProducts.isEmpty)
+                                  SliverFillRemaining(
+                                    hasScrollBody: false,
+                                    child: Center(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.search_off_rounded,
+                                            size: 56,
+                                            color: Colors.grey.shade300,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            "No products found",
+                                            style: TextStyle(
+                                              fontSize: 15,
+                                              color: Colors.grey.shade400,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  SliverPadding(
+                                    padding: EdgeInsets.fromLTRB(
+                                      horizontalPadding,
+                                      4,
+                                      horizontalPadding,
+                                      20,
+                                    ),
+                                    sliver: SliverGrid(
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: crossAxisCount,
+                                        childAspectRatio: childAspectRatio,
+                                        crossAxisSpacing: isWideScreen ? 24 : 12,
+                                        mainAxisSpacing: isWideScreen ? 24 : 12,
+                                      ),
+                                      delegate: SliverChildBuilderDelegate(
+                                        (context, index) {
+                                          final product = filteredProducts[index];
+                                          return ImageCounterCard(
+                                            isclick: true,
+                                            key: itemKeys[index],
+                                            id: product.id.toString(),
+                                            imagepath: product.imageUrl ?? "",
+                                            product: product.name,
+                                            price: product.price,
+                                            point: product.point,
+                                            onSelect: () => flyToCart(
+                                              itemKeys[index],
+                                              product.imageUrl ?? "",
+                                            ),
+                                            onSelect2: () => flyFromCart(
+                                              itemKeys[index],
+                                              product.imageUrl ?? "",
+                                            ),
+                                          );
+                                        },
+                                        childCount: filteredProducts.length,
+                                      ),
                                     ),
                                   ),
-                                ],
-                              ),
-                            )
-                          : GridView.builder(
-                              padding: EdgeInsets.fromLTRB(
-                                horizontalPadding,
-                                4,
-                                horizontalPadding,
-                                20,
-                              ),
-                              physics: const BouncingScrollPhysics(),
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: crossAxisCount,
-                                    childAspectRatio: childAspectRatio,
-                                    crossAxisSpacing: isWideScreen ? 24 : 12,
-                                    mainAxisSpacing: isWideScreen ? 24 : 12,
-                                  ),
-                              itemCount: filteredProducts.length,
-                              itemBuilder: (context, index) {
-                                final product = filteredProducts[index];
-                                return ImageCounterCard(
-                                  key: itemKeys[index],
-                                  id: product.id.toString(),
-                                  imagepath: product.imageUrl ?? "",
-                                  product: product.name,
-                                  price: product.price,
-                                  point: product.point,
-                                  onSelect: () => flyToCart(
-                                    itemKeys[index],
-                                    product.imageUrl ?? "",
-                                  ),
-                                  onSelect2: () => flyFromCart(
-                                    itemKeys[index],
-                                    product.imageUrl ?? "",
-                                  ),
-                                );
-                              },
+                                SliverToBoxAdapter(
+                                  child: _buildAdminForm(productProvider),
+                                ),
+                              ],
                             ),
                     ),
                   ],
@@ -417,6 +376,121 @@ class _AdminState extends State<Admin> with TickerProviderStateMixin {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAdminForm(ProductProvider productProvider) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFDCEEDC), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Add New Product",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1B5E20),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildFormTextField(_nameController, "Product Name", Icons.label_outline),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: _buildFormTextField(_priceController, "Price", Icons.attach_money, isNumber: true)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildFormTextField(_pointController, "Point", Icons.star_outline, isNumber: true)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _pickImage,
+                  icon: const Icon(Icons.image_outlined),
+                  label: Text(_imageFile == null ? "Pick Image" : "Change Image"),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF43A047),
+                    side: const BorderSide(color: Color(0xFF43A047)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              if (_imageFile != null) ...[
+                const SizedBox(width: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: kIsWeb 
+                    ? Image.network(_imageFile!.path, width: 40, height: 40, fit: BoxFit.cover)
+                    : Image.file(File(_imageFile!.path), width: 40, height: 40, fit: BoxFit.cover),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: productProvider.isLoading ? null : _submitProduct,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF43A047),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
+              ),
+              child: productProvider.isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : const Text("Create Product", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormTextField(TextEditingController controller, String label, IconData icon, {bool isNumber = false}) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: isNumber ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 20, color: const Color(0xFF43A047)),
+        filled: true,
+        fillColor: const Color(0xFFF8FBF8),
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE8F5E9), width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF43A047), width: 1.5),
+        ),
       ),
     );
   }

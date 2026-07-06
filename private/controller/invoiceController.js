@@ -1,5 +1,4 @@
 import Invoice from '../model/invoiceModel.js';
-import Product from '../model/productModel.js';
 import db from '../model/db.js';
 
 export function getItems(req, res) {
@@ -19,7 +18,7 @@ export function getItems(req, res) {
 
 export function postItem(req, res) {
     const { userid, product, quantity } = req.body;
-    Product.findById(product, (err, results) => {
+    Invoice.getproductbyid(product, (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         if (results.length === 0) return res.status(404).json({ message: "Product not found" });
 

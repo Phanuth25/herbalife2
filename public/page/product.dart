@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:project2/herbalife/public/constants/constants.dart';
 import 'package:project2/herbalife/public/page/admin.dart';
@@ -121,12 +122,17 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
                           const Spacer(),
                           if (profileProvider.role == 'admin')
                             _buildHeaderButton(
-                              icon: Icons.help_outline_rounded,
+                              icon: Icons.admin_panel_settings_rounded,
                               label: "Admin Page",
                               color: Colors.white,
                               textColor: Colors.grey.shade700,
                               iconColor: const Color(0xFF43A047),
-                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Admin(isadmin: true,),)),
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const Admin(),
+                                ),
+                              ),
                             ),
                           if (profileProvider.role != 'admin')
                             _buildHeaderButton(
@@ -340,9 +346,9 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            productProvider.isLoading 
-                              ? "Fetching items..." 
-                              : "${filteredProducts.length} Products Available",
+                            productProvider.isLoading
+                                ? "Fetching items..."
+                                : "${filteredProducts.length} Products Available",
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -354,9 +360,13 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
                     ),
 
                     Expanded(
-                      child: productProvider.isLoading 
-                        ? const Center(child: CircularProgressIndicator(color: kPrimaryGreen))
-                        : filteredProducts.isEmpty
+                      child: productProvider.isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: kPrimaryGreen,
+                              ),
+                            )
+                          : filteredProducts.isEmpty
                           ? Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -397,6 +407,7 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
                               itemBuilder: (context, index) {
                                 final product = filteredProducts[index];
                                 return ImageCounterCard(
+                                  isclick: false,
                                   key: itemKeys[index],
                                   id: product.id.toString(),
                                   imagepath: product.imageUrl ?? "",
@@ -480,8 +491,9 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
   }
 
   void flyToCart(GlobalKey itemKey, String imagePath) {
-    if (itemKey.currentContext == null || cartKey.currentContext == null)
+    if (itemKey.currentContext == null || cartKey.currentContext == null) {
       return;
+    }
     final itemBox = itemKey.currentContext!.findRenderObject() as RenderBox;
     final itemPos = itemBox.localToGlobal(Offset.zero);
     final cartBox = cartKey.currentContext!.findRenderObject() as RenderBox;
@@ -491,8 +503,9 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
   }
 
   void flyFromCart(GlobalKey itemKey, String imagePath) {
-    if (itemKey.currentContext == null || cartKey.currentContext == null)
+    if (itemKey.currentContext == null || cartKey.currentContext == null) {
       return;
+    }
     final itemBox = itemKey.currentContext!.findRenderObject() as RenderBox;
     final itemPos = itemBox.localToGlobal(Offset.zero);
     final cartBox = cartKey.currentContext!.findRenderObject() as RenderBox;
@@ -538,11 +551,21 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
 
   Widget _buildFlyImage(String imagePath, double size) {
     if (imagePath.startsWith('http')) {
-      return Image.network(imagePath, width: size, height: size, 
-        errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: size));
+      return Image.network(
+        imagePath,
+        width: size,
+        height: size,
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(Icons.broken_image, size: size),
+      );
     } else if (imagePath.isNotEmpty) {
-      return Image.asset(imagePath, width: size, height: size,
-        errorBuilder: (context, error, stackTrace) => Icon(Icons.image, size: size));
+      return Image.asset(
+        imagePath,
+        width: size,
+        height: size,
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(Icons.image, size: size),
+      );
     } else {
       return Icon(Icons.image, size: size);
     }

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:project2/herbalife/public/provider/cart_provider.dart';
 import 'package:project2/herbalife/public/provider/profile_provider.dart';
 import '../provider/data_provider.dart';
+import '../provider/product_provider.dart';
 
 class ImageCounterCard extends StatefulWidget {
   final String imagepath;
@@ -13,6 +14,7 @@ class ImageCounterCard extends StatefulWidget {
   final String id;
   final VoidCallback onSelect;
   final VoidCallback onSelect2;
+  final bool isclick;
 
   const ImageCounterCard({
     super.key,
@@ -23,6 +25,7 @@ class ImageCounterCard extends StatefulWidget {
     required this.onSelect,
     required this.onSelect2,
     required this.id,
+    required this.isclick,
   });
 
   @override
@@ -73,14 +76,16 @@ class _ImageCounterCardState extends State<ImageCounterCard>
         widget.imagepath,
         height: height,
         fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 50),
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.broken_image, size: 50),
       );
     } else if (widget.imagepath.isNotEmpty) {
       return Image.asset(
         widget.imagepath,
         height: height,
         fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => const Icon(Icons.image, size: 50),
+        errorBuilder: (context, error, stackTrace) =>
+            const Icon(Icons.image, size: 50),
       );
     } else {
       return const Icon(Icons.image, size: 50);
@@ -92,9 +97,8 @@ class _ImageCounterCardState extends State<ImageCounterCard>
     final cartProvider = context.watch<CartProvider>();
     final profileProvider = context.watch<ProfileProvider>();
     final dataProvider = Provider.of<SecureStorageProvider>(context);
-    final userIdFuture = dataProvider.readSecureData('userId');
     final int productId = int.tryParse(widget.id) ?? 0;
-
+    final productProvider = context.watch<ProductProvider>();
     final cartItem = cartProvider.cartItems
         .where((item) => item.product == productId)
         .firstOrNull;
@@ -124,19 +128,11 @@ class _ImageCounterCardState extends State<ImageCounterCard>
           scale: _scaleAnim ?? const AlwaysStoppedAnimation(1.0),
           child: GestureDetector(
             onTap: () async {
-              final userId = await userIdFuture;
-              if (userId == null || userId == 0) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Please login first")),
-                );
-                return;
-              }
-
               final bool wasSelected = isSelected;
               _onTap();
 
               if (!wasSelected) {
+                final String? userId = await dataProvider.readSecureData('userId');
                 await cartProvider.postitem(userId, productId, 1);
               } else {
                 final int? invoiceId = cartProvider.getInvoiceId(productId);
@@ -171,7 +167,9 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(18),
+                    ),
                     child: Stack(
                       children: [
                         Container(
@@ -193,41 +191,93 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                                 color: Color(0xFF2E7D32),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.check_rounded, color: Colors.white, size: 12),
+                              child: const Icon(
+                                Icons.check_rounded,
+                                color: Colors.white,
+                                size: 12,
+                              ),
                             ),
                           ),
                         if (discount > 0)
                           Positioned(
                             top: 8,
                             left: 8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: Colors.red.shade600,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                "-$discount%",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    "-$discount%",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(width: 100),
+                                ...[
+                                  if (widget.isclick == true)
+                                    InkWell(
+                                      //here
+                                      onTap: () async {
+                                        await productProvider.deleteProduct(
+                                          productId,
+                                        );
+                                        widget.onSelect2();
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 7,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          "Remove",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ],
                             ),
                           ),
                       ],
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.fromLTRB(cardPadding, 8, cardPadding, 0),
+                    padding: EdgeInsets.fromLTRB(
+                      cardPadding,
+                      8,
+                      cardPadding,
+                      0,
+                    ),
                     child: Column(
                       children: [
                         SizedBox(
                           height: titleFontSize * 1.3 * 2,
                           child: Text(
                             widget.product,
-                            textAlign: isWideScreen ? TextAlign.center : TextAlign.left,
+                            textAlign: isWideScreen
+                                ? TextAlign.center
+                                : TextAlign.left,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -241,7 +291,9 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                         ),
                         const SizedBox(height: 6),
                         Row(
-                          mainAxisAlignment: isWideScreen ? MainAxisAlignment.center : MainAxisAlignment.start,
+                          mainAxisAlignment: isWideScreen
+                              ? MainAxisAlignment.center
+                              : MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
@@ -268,7 +320,10 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                         ),
                         const SizedBox(height: 4),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFE8F5E9),
                             borderRadius: BorderRadius.circular(20),
@@ -276,7 +331,11 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.stars_rounded, size: 12, color: Color(0xFF43A047)),
+                              const Icon(
+                                Icons.stars_rounded,
+                                size: 12,
+                                color: Color(0xFF43A047),
+                              ),
                               const SizedBox(width: 3),
                               Text(
                                 "${widget.point} pts",
@@ -295,7 +354,12 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                   const Spacer(),
                   if (isSelected)
                     Padding(
-                      padding: EdgeInsets.fromLTRB(cardPadding, 0, cardPadding, 10),
+                      padding: EdgeInsets.fromLTRB(
+                        cardPadding,
+                        0,
+                        cardPadding,
+                        10,
+                      ),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 140),
@@ -304,21 +368,31 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                             decoration: BoxDecoration(
                               color: const Color(0xFFF5FBF5),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFDCEEDC), width: 1.5),
+                              border: Border.all(
+                                color: const Color(0xFFDCEEDC),
+                                width: 1.5,
+                              ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 GestureDetector(
                                   onTap: () async {
-                                    final int? invoiceId = cartProvider.getInvoiceId(productId);
-                                    if (invoiceId == null || currentCounter <= 0) return;
+                                    final int? invoiceId = cartProvider
+                                        .getInvoiceId(productId);
+                                    if (invoiceId == null ||
+                                        currentCounter <= 0) {
+                                      return;
+                                    }
 
                                     if (currentCounter == 1) {
                                       await cartProvider.deleteitem(invoiceId);
                                       cartProvider.clearInvoiceId(productId);
                                     } else {
-                                      await cartProvider.postitem2(invoiceId, currentCounter - 1);
+                                      await cartProvider.postitem2(
+                                        invoiceId,
+                                        currentCounter - 1,
+                                      );
                                     }
                                     widget.onSelect2();
                                   },
@@ -332,7 +406,11 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                                         bottomLeft: Radius.circular(10),
                                       ),
                                     ),
-                                    child: const Icon(Icons.remove_rounded, color: Colors.red, size: 18),
+                                    child: const Icon(
+                                      Icons.remove_rounded,
+                                      color: Colors.red,
+                                      size: 18,
+                                    ),
                                   ),
                                 ),
                                 Text(
@@ -346,9 +424,13 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                                 GestureDetector(
                                   onTap: () async {
                                     widget.onSelect();
-                                    final int? invoiceId = cartProvider.getInvoiceId(productId);
+                                    final int? invoiceId = cartProvider
+                                        .getInvoiceId(productId);
                                     if (invoiceId != null) {
-                                      await cartProvider.postitem2(invoiceId, currentCounter + 1);
+                                      await cartProvider.postitem2(
+                                        invoiceId,
+                                        currentCounter + 1,
+                                      );
                                     }
                                   },
                                   child: Container(
@@ -361,7 +443,11 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                                         bottomRight: Radius.circular(10),
                                       ),
                                     ),
-                                    child: const Icon(Icons.add_rounded, color: Color(0xFF2E7D32), size: 18),
+                                    child: const Icon(
+                                      Icons.add_rounded,
+                                      color: Color(0xFF2E7D32),
+                                      size: 18,
+                                    ),
                                   ),
                                 ),
                               ],

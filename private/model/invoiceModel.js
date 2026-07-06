@@ -18,7 +18,10 @@ const Invoice = {
         `;
         db.query(sql, [userId], callback);
     },
-
+    getproductbyid: (data, callback) => {
+        const sql = "SELECT * FROM products WHERE id = ?";
+        db.query(sql, [data], callback);
+    },
     create: (data, callback) => {
         const { userid, product, quantity, total, point } = data;
         const sql = "INSERT INTO invoices (userid, product, quantity, total, point) VALUES (?, ?, ?, ?, ?)";
