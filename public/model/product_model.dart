@@ -1,60 +1,65 @@
-class Product {
-  final int id;
-  final String name;
-  final double price;
-  final String image;
-  final double point;
+// Handles the whole API response for products
+class ProductResponseModel {
+  final bool success;
+  final String message;
+  final List<ProductItemModel> data;
 
-  Product({
-    required this.id,
-    required this.point,
-    required this.name,
-    required this.price,
-    required this.image,
+  ProductResponseModel({
+    required this.success,
+    required this.message,
+    required this.data,
   });
+
+  factory ProductResponseModel.fromJson(Map<String, dynamic> json) {
+    return ProductResponseModel(
+      // Use "is bool" check instead of "as bool" for safer web performance
+      success: json['success'] is bool ? json['success'] : (json['success'] == 1),
+
+      // Use String.valueOf style logic
+      message: json['message'] == null ? "" : "${json['message']}",
+
+      data: (json['data'] as List?)
+          ?.map((item) => ProductItemModel.fromJson(item))
+          .toList() ??
+          [],
+    );
+  }
 }
 
-List<Product> products = [
-  Product(
-    id: 1,
-    name: "1457 | អាហារបំប៉នសម្រាប់អត្តពលិក",
-    price: 43.95,
-    image: "assets/images/herb3.png",
-    point: 41.60,
-  ),
-  Product(
-    id: 2,
-    name: "1463 | អាហារបំប៉ន ២៤ សុីអរសេវិនដ្រាយ",
-    price: 29.59,
-    image: "assets/images/herb4.png",
-    point: 24.90,
-  ),
-  Product(
-    id: 3,
-    name: "1829 | សុីមភ្លីប្រូប៉ាយអូទិក ៣០ក្រាម",
-    price: 21.18,
-    image: "assets/images/herb5.png",
-    point: 20.45,
-  ),
-  Product(
-    id: 4,
-    name: "0141 | អាហារសុខភាពហ្វូមមូទ្បាវាន់ រសជាតិវ៉ាន់នីទ្បា 550ក្រាម",
-    price: 25.86,
-    image: "assets/images/herb6.png",
-    point: 23.95,
-  ),
-  Product(
-    id: 5,
-    name: "0142 | អាហារសុខភាពហ្វូមមូទ្បាវាន់ រសជាតិសូកូទ្បា 550ក្រាម",
-    price: 25.86,
-    image: "assets/images/herb7.png",
-    point: 23.95,
-  ),
-  Product(
-    id: 6,
-    name: "0143 | អាហារសុខភាពហ្វូមមូទ្បាវាន់ រសជាតិស្រ្តបីរី 550ក្រាម",
-    price: 25.86,
-    image: "assets/images/herb8.png",
-    point: 23.95,
-  ),
-];
+// Handles each individual product item
+class ProductItemModel {
+  final int? id;
+  final String name;
+  final String price;
+  final String point;
+  final String? imageUrl;
+
+  ProductItemModel({
+    this.id,
+    required this.name,
+    required this.price,
+    required this.point,
+    this.imageUrl,
+  });
+
+  factory ProductItemModel.fromJson(Map<String, dynamic> json) {
+    return ProductItemModel(
+      // Safely parse ID even if it comes as a String or Int from JS
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ""),
+      name: "${json['name'] ?? ""}",
+      price: "${json['price'] ?? "0.00"}",
+      point: "${json['point'] ?? "0"}",
+      imageUrl: json['image_url']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) 'id': id,
+      'name': name,
+      'price': price,
+      'point': point,
+      'image_url': imageUrl,
+    };
+  }
+}

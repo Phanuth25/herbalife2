@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:project2/herbalife/public/constants/constants.dart';
-import 'package:project2/herbalife/public/page/admin.dart';
 import 'package:project2/herbalife/public/page/info.dart';
 import 'package:project2/herbalife/public/provider/auth_provider.dart';
 import 'package:project2/herbalife/public/provider/cart_provider.dart';
@@ -10,14 +9,16 @@ import 'package:project2/herbalife/public/widget/item.dart';
 import 'package:project2/herbalife/public/page/cart.dart';
 import 'package:provider/provider.dart';
 
-class Product extends StatefulWidget {
-  const Product({super.key});
+class Admin extends StatefulWidget {
+  final bool isadmin;
+
+  Admin({super.key, required this.isadmin});
 
   @override
-  State<Product> createState() => _ProductState();
+  State<Admin> createState() => _AdminState();
 }
 
-class _ProductState extends State<Product> with TickerProviderStateMixin {
+class _AdminState extends State<Admin> with TickerProviderStateMixin {
   bool isSelected = false;
   String searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
@@ -119,15 +120,6 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
                             height: (screenWidth * 0.08).clamp(30.0, 40.0),
                           ),
                           const Spacer(),
-                          if (profileProvider.role == 'admin')
-                            _buildHeaderButton(
-                              icon: Icons.help_outline_rounded,
-                              label: "Admin Page",
-                              color: Colors.white,
-                              textColor: Colors.grey.shade700,
-                              iconColor: const Color(0xFF43A047),
-                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => Admin(isadmin: true,),)),
-                            ),
                           if (profileProvider.role != 'admin')
                             _buildHeaderButton(
                               icon: Icons.help_outline_rounded,
@@ -340,9 +332,9 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            productProvider.isLoading 
-                              ? "Fetching items..." 
-                              : "${filteredProducts.length} Products Available",
+                            productProvider.isLoading
+                                ? "Fetching items..."
+                                : "${filteredProducts.length} Products Available",
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -354,9 +346,13 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
                     ),
 
                     Expanded(
-                      child: productProvider.isLoading 
-                        ? const Center(child: CircularProgressIndicator(color: kPrimaryGreen))
-                        : filteredProducts.isEmpty
+                      child: productProvider.isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: kPrimaryGreen,
+                              ),
+                            )
+                          : filteredProducts.isEmpty
                           ? Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -538,11 +534,21 @@ class _ProductState extends State<Product> with TickerProviderStateMixin {
 
   Widget _buildFlyImage(String imagePath, double size) {
     if (imagePath.startsWith('http')) {
-      return Image.network(imagePath, width: size, height: size, 
-        errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: size));
+      return Image.network(
+        imagePath,
+        width: size,
+        height: size,
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(Icons.broken_image, size: size),
+      );
     } else if (imagePath.isNotEmpty) {
-      return Image.asset(imagePath, width: size, height: size,
-        errorBuilder: (context, error, stackTrace) => Icon(Icons.image, size: size));
+      return Image.asset(
+        imagePath,
+        width: size,
+        height: size,
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(Icons.image, size: size),
+      );
     } else {
       return Icon(Icons.image, size: size);
     }

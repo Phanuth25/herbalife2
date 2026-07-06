@@ -3,7 +3,6 @@ import 'package:project2/herbalife/public/constants/constants.dart';
 import 'package:provider/provider.dart';
 import 'package:project2/herbalife/public/provider/cart_provider.dart';
 import 'package:project2/herbalife/public/provider/profile_provider.dart';
-
 import '../provider/data_provider.dart';
 
 class ImageCounterCard extends StatefulWidget {
@@ -68,6 +67,26 @@ class _ImageCounterCardState extends State<ImageCounterCard>
     _selectAnim?.forward();
   }
 
+  Widget _buildProductImage(double height) {
+    if (widget.imagepath.startsWith('http')) {
+      return Image.network(
+        widget.imagepath,
+        height: height,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 50),
+      );
+    } else if (widget.imagepath.isNotEmpty) {
+      return Image.asset(
+        widget.imagepath,
+        height: height,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => const Icon(Icons.image, size: 50),
+      );
+    } else {
+      return const Icon(Icons.image, size: 50);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cartProvider = context.watch<CartProvider>();
@@ -90,16 +109,12 @@ class _ImageCounterCardState extends State<ImageCounterCard>
 
     final double effectivePrice = _getEffectivePrice(discount);
 
-    // Device-level breakpoint remains based on screen width
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isWideScreen = screenWidth > 600;
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Use the actual width of the card/grid cell
         final double cardWidth = constraints.maxWidth;
-
-        // Size calculations based on cardWidth as requested
         final double cardPadding = (cardWidth * 0.08).clamp(8.0, 12.0);
         final double titleFontSize = (cardWidth * 0.10).clamp(10.0, 12.0);
         final double priceFontSize = (cardWidth * 0.11).clamp(12.0, 14.0);
@@ -165,10 +180,7 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                           color: const Color(0xFFF0F8F0),
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Image.asset(
-                              widget.imagepath,
-                              fit: BoxFit.contain,
-                            ),
+                            child: _buildProductImage(imageHeight),
                           ),
                         ),
                         if (isSelected)
@@ -211,7 +223,6 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                     padding: EdgeInsets.fromLTRB(cardPadding, 8, cardPadding, 0),
                     child: Column(
                       children: [
-                        // Fixed height equivalent to 2 lines of text
                         SizedBox(
                           height: titleFontSize * 1.3 * 2,
                           child: Text(
@@ -281,7 +292,7 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                       ],
                     ),
                   ),
-                  const Spacer(), // Pushes selector to the very bottom
+                  const Spacer(),
                   if (isSelected)
                     Padding(
                       padding: EdgeInsets.fromLTRB(cardPadding, 0, cardPadding, 10),
