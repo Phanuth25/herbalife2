@@ -509,7 +509,7 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
                                             Navigator.push(context, MaterialPageRoute(
                                               builder: (context) => InvoiceScreen(
                                                 billNumber: "CART-${DateTime.now().millisecondsSinceEpoch}",
-                                                showHomeButton: true,
+                                                showHomeButton: false,
                                                 totalPrice: totalPrice,
                                                 totalPoint: totalPoint,
                                                 items: cartProvider.cartItems.map((item) => InvoiceDisplayItem(
@@ -517,7 +517,7 @@ class _CartState extends State<Cart> with SingleTickerProviderStateMixin {
                                                   quantity: item.quantity,
                                                   point: item.point,
                                                   total: item.total,
-                                                  isPurchased: false,
+                                                  isPurchased: true,
                                                 )).toList(),
                                               ),
                                             ));

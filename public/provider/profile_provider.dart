@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:project2/herbalife/public/provider/data_provider.dart';
 import 'package:project2/herbalife/public/constants/constants.dart';
@@ -34,6 +33,24 @@ class ProfileProvider extends ChangeNotifier {
   String get ispoint => point ?? "No data";
   String get isposition => position ?? "No data";
   String get isdiscount => discount ?? "No data";
+
+  void clearProfile() {
+    email = null;
+    phone = null;
+    address = null;
+    name = null;
+    point = null;
+    position = null;
+    discount = null;
+    photo = null;
+    totalPoint = null;
+    totalAmount = null;
+    userId = null;
+    id = null;
+    role = null;
+    message = null;
+    notifyListeners();
+  }
 
   Future<void> getProfile() async {
     message = "";

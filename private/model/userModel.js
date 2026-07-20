@@ -11,6 +11,20 @@ const User = {
         db.query(sql, [id], callback);
     },
 
+
+    findAllUser: (callback) => {
+        const sql = `select info.name,info.id,u.role
+                     from infos info inner join users u on info.id=u.userids`;
+        db.query(sql, callback);
+    },
+    updateRoletoAdmin: (id, role, callback) => {
+        const sql = "UPDATE users SET role = ? WHERE userids = ?";
+        db.query(sql, [role, id], callback);
+    },
+    updateRoletoUser: (id, role, callback) => {
+        const sql = "UPDATE users SET role = ? WHERE userids = ?";
+        db.query(sql, [role, id], callback);
+    },
     updateRefreshToken: (id, token, callback) => {
         const sql = "UPDATE users SET refresh_token = ? WHERE id = ?";
         db.query(sql, [token, id], callback);

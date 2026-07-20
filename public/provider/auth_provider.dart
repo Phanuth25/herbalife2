@@ -19,6 +19,17 @@ class Authprovider extends ChangeNotifier {
 
   String get isUserid => userId ?? "No id";
 
+  void clearAuth() {
+    message = null;
+    userToken = null;
+    refreshToken = null;
+    userId = null;
+    id = null;
+    infoId = null;
+    image = null;
+    notifyListeners();
+  }
+
   Future<void> login(String userid, String password) async {
     message = "";
     isLoading = true;

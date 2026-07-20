@@ -3,11 +3,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:project2/herbalife/public/constants/constants.dart';
-import 'package:project2/herbalife/public/page/login.dart';
+import 'package:project2/herbalife/public/data/notifier.dart';
 import 'package:project2/herbalife/public/page/product.dart';
+import 'package:project2/herbalife/public/provider/auth_provider.dart';
+import 'package:project2/herbalife/public/provider/cart_provider.dart';
 import 'package:project2/herbalife/public/provider/data_provider.dart';
 import 'package:project2/herbalife/public/provider/profile_provider.dart';
 import 'package:provider/provider.dart';
+
+import '../widget/welcome.dart';
 
 class Info extends StatefulWidget {
   final String? userId;
@@ -96,7 +100,6 @@ class _InfoState extends State<Info> with SingleTickerProviderStateMixin {
     final size = MediaQuery.of(context).size;
     final screenWidth = size.width;
     final isWideScreen = screenWidth > 600;
-    final contentWidth = screenWidth > 500 ? 500.0 : screenWidth;
     
     // Dynamic Avatar size
     final double avatarSize = (screenWidth * 0.4).clamp(140.0, 200.0);
@@ -342,9 +345,26 @@ class _InfoState extends State<Info> with SingleTickerProviderStateMixin {
                                                 content: const Text('Are you sure you want to log out?'),
                                                 actions: [
                                                   TextButton(
-                                                    onPressed: () {
-                                                      dataProvider.clearSecureData();
-                                                      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const Login()), (route) => false);
+                                                    onPressed: () async {
+                                                      // 1. Reset Global Notifiers to trigger root UI change
+                                                      isUser.value = "";
+                                                      isId.value = "";
+                                                      
+                                                      // 2. Clear secure storage
+                                                      await dataProvider.clearSecureData();
+                                                      
+                                                      // 3. Reset all providers to clear in-memory state
+                                                      if (!mounted) return;
+                                                      context.read<ProfileProvider>().clearProfile();
+                                                      context.read<CartProvider>().clearCart();
+                                                      context.read<Authprovider>().clearAuth();
+
+                                                      // 4. Navigate back to Welcome/Login and clear stack
+                                                      Navigator.pushAndRemoveUntil(
+                                                        context, 
+                                                        MaterialPageRoute(builder: (context) => const Welcome()), 
+                                                        (route) => false
+                                                      );
                                                     },
                                                     child: const Text('Yes'),
                                                   ),

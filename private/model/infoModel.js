@@ -23,10 +23,9 @@ const Info = {
         db.query(sql, [imageUrl, id], callback);
     },
 
-    updatePoints: (id, pointChange, isAddition, callback) => {
-        const operator = isAddition ? '+' : '-';
-        const sql = `UPDATE infos SET point = point ${operator} ? WHERE id = ?`;
-        db.query(sql, [pointChange, id], callback);
+    updatePoints: (userids, pointChange, callback) => {
+        const sql = "UPDATE infos SET point = ? WHERE id = ?";
+        db.query(sql, [pointChange, userids], callback);
     }
 };
 

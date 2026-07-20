@@ -23,6 +23,21 @@ class CartProvider extends ChangeNotifier {
   List<int> activeInvoiceIds = [];
   Map<int, int> productInvoiceMap = {};
 
+  void clearCart() {
+    message = null;
+    isLoading = false;
+    invoiceId = null;
+    userId = null;
+    totalPoints = 0.0;
+    totalPoint = 0.0;
+    totalPrice = 0.0;
+    cartItems = [];
+    invoiceItems = [];
+    activeInvoiceIds = [];
+    productInvoiceMap = {};
+    notifyListeners();
+  }
+
   void saveInvoiceId(int productId, int invoiceId) {
     productInvoiceMap[productId] = invoiceId;
     notifyListeners();
@@ -200,7 +215,7 @@ class CartProvider extends ChangeNotifier {
     message = '';
     isLoading = true;
     try {
-      final result = await _dio.get(
+      final result = await _dio.post(
         '$accounturl/selectpurchased',
         data: {'invoiceIds': activeInvoiceIds},
       );

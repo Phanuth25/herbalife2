@@ -31,7 +31,7 @@ export function postItem(req, res) {
 
             res.status(200).json({
                 success: true,
-                message: "Purchased successfully",
+                message: "Added to cart successfully",
                 invoiceId: insertResults.insertId,
                 total: total,
                 point: point,
@@ -67,7 +67,8 @@ export function updateQuantity(req, res) {
         if (invoiceResults.length === 0) return res.status(404).json({ message: "Invoice not found" });
 
         const productId = invoiceResults[0].product;
-        Product.findById(productId, (err, productResults) => {
+        // Fix: Use Invoice.getproductbyid instead of undefined Product object
+        Invoice.getproductbyid(productId, (err, productResults) => {
             if (err) return res.status(500).json({ error: err.message });
             if (productResults.length === 0) return res.status(404).json({ message: "Product not found" });
 

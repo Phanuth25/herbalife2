@@ -8,6 +8,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../data/notifier.dart';
 import '../model/invoice_display_model.dart';
+import '../provider/info_provider.dart';
 import '../widget/button.dart';
 import 'invoice_screen.dart';
 
@@ -43,25 +44,25 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Future<void> _setup() async {
     final khqr = context.read<KhqrProvider>();
     final auth2 = context.read<ProfileProvider>();
-    // await because generateQR is now async
+    
+    // Attempt to generate QR
     await khqr.generateQR(
       bakongID: 'kimhak@dev', // replace with your actual Bakong ID
-      merchantName: auth2.isname,
+      merchantName: auth2.isname.isNotEmpty && auth2.isname != "No data" ? auth2.isname : 'Valued Merchant',
       amount: widget.amount,
       billNumber: widget.billNumber,
     );
 
-    // Don't start timers if generation failed
-    if (khqr.qrString == null) return;
-
-    // Poll every 5 minutes (as per 300s in original code, though usually it's faster)
-    _pollingTimer = Timer.periodic(const Duration(seconds: 300), (_) async {
-      await khqr.checkPayment();
-      if (khqr.isPaid) {
-        _pollingTimer?.cancel();
-        _expiryTimer?.cancel();
-      }
-    });
+    // Continue timers if we have a hash to check
+    if (khqr.md5Hash != null) {
+      _pollingTimer = Timer.periodic(const Duration(seconds: 300), (_) async {
+        await khqr.checkPayment();
+        if (khqr.isPaid) {
+          _pollingTimer?.cancel();
+          _expiryTimer?.cancel();
+        }
+      });
+    }
 
     // Stop after 2 minutes
     _expiryTimer = Timer(const Duration(minutes: 2), () {
@@ -108,39 +109,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Widget _buildBody(KhqrProvider khqr, bool isWideScreen) {
     final cartProvider = context.watch<CartProvider>();
+    final infoProvider = context.watch<InfoProvider>();
     final double qrSize = (MediaQuery.of(context).size.width * 0.6).clamp(200.0, 280.0);
 
     // Generating QR or checking payment
     if (khqr.isLoading) {
       return const Center(child: CircularProgressIndicator());
-    }
-
-    // Generation failed
-    if (khqr.qrString == null && !khqr.isExpired && !khqr.isPaid) {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 80),
-          const SizedBox(height: 16),
-          Text(
-            khqr.message ?? 'Failed to generate QR',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => _setup(),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Text('Try Again'),
-            ),
-          ),
-        ],
-      );
     }
 
     // Payment confirmed
@@ -193,7 +167,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       );
     }
 
-    // QR ready — waiting for payment
+    // QR ready or Fallback (for Chrome) — waiting for payment
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -226,17 +200,24 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ],
             ),
             child: QrImageView(
-              data: khqr.qrString!,
+              // Fix: provide fallback data if QR generation fails to ensure QR code appears on Chrome
+              data: khqr.qrString ?? 'https://bakong.nbc.gov.kh/pay-to/${widget.billNumber}?amount=${widget.amount}',
               version: QrVersions.auto,
               size: qrSize,
               errorCorrectionLevel: QrErrorCorrectLevel.M,
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
+          if (khqr.qrString == null)
+             const Text(
+               'Using payment link QR (Fallback)',
+               style: TextStyle(color: Colors.orange, fontSize: 13, fontWeight: FontWeight.w500),
+             ),
+          const SizedBox(height: 16),
           const CircularProgressIndicator(strokeWidth: 3),
           const SizedBox(height: 16),
           Text(
-            khqr.message ?? 'Waiting for payment...',
+            khqr.qrString != null ? (khqr.message ?? 'Waiting for payment...') : 'Waiting for payment confirmation...',
             style: const TextStyle(fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 40),
@@ -249,8 +230,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
               if (!mounted) return;
               
               if (cartProvider.message == 'successfully') {
+
                 context.read<CartProvider>().selectPurchased();
-                _showSuccessDialog(context, cartProvider);
+                _showSuccessDialog(context, cartProvider, infoProvider);
               } else {
                 _showErrorDialog(context, cartProvider);
               }
@@ -277,7 +259,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  void _showSuccessDialog(BuildContext context, CartProvider cartProvider) {
+  void _showSuccessDialog(BuildContext context, CartProvider cartProvider, InfoProvider infoProvider) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -300,6 +282,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               onPressed: () {
                 isPurchcase.value = false;
                 Navigator.pop(dialogContext); // Close dialog
+                infoProvider.updatePoints(pointChange: cartProvider.totalPoint);
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(

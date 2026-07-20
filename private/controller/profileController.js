@@ -35,7 +35,8 @@ export async function registerInfo(req, res) {
 
     try {
         const result = await new Promise((resolve, reject) => {
-            cloudinary.upload_stream({ folder: 'uploads' }, (error, result) => {
+            // Fix: upload_stream is a property of cloudinary.uploader
+            cloudinary.uploader.upload_stream({ folder: 'uploads' }, (error, result) => {
                 if (error) reject(error);
                 else resolve(result);
             }).end(req.file.buffer);
@@ -58,7 +59,8 @@ export async function updatePhotoController(req, res) {
 
     try {
         const result = await new Promise((resolve, reject) => {
-            cloudinary.upload_stream({ folder: 'uploads' }, (error, result) => {
+            // Fix: upload_stream is a property of cloudinary.uploader
+            cloudinary.uploader.upload_stream({ folder: 'uploads' }, (error, result) => {
                 if (error) reject(error);
                 else resolve(result);
             }).end(req.file.buffer);

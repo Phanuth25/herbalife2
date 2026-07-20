@@ -11,6 +11,7 @@ import profileRoutes from './private/routes/profileRoutes.js';
 import invoiceRoutes from './private/routes/invoiceRoutes.js';
 import transactionRoutes from './private/routes/transactionRoutes.js';
 import productRoutes from './private/routes/productRoute.js';
+import infoRoutes from './private/routes/infoRoutes.js';
 
 const PORT = process.env.PORT || 3000;
 
@@ -29,5 +30,6 @@ app.use('/api', profileRoutes);
 app.use('/api', invoiceRoutes);
 app.use('/api', transactionRoutes);
 app.use('/api', productRoutes);
+app.use('/api', infoRoutes);
 
 app.listen(PORT, () => console.log('Server started on port 3000'));

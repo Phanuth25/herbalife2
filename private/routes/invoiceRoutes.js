@@ -15,6 +15,6 @@ router.post('/postitem', postItem);
 router.delete('/deleteitem/:product', verifyToken, deleteItem);
 router.patch('/postquantity', verifyToken, updateQuantity);
 router.patch('/markaspurchased', verifyToken, markAsPurchasedController);
-router.get('/selectpurchased', selectPurchased);
+router.post('/selectpurchased', selectPurchased);
 
 export default router;

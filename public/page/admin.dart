@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:project2/herbalife/public/constants/constants.dart';
 import 'package:project2/herbalife/public/page/info.dart';
+import 'package:project2/herbalife/public/page/user.dart';
 import 'package:project2/herbalife/public/provider/auth_provider.dart';
 import 'package:project2/herbalife/public/provider/cart_provider.dart';
 import 'package:project2/herbalife/public/provider/profile_provider.dart';
@@ -13,7 +14,7 @@ import 'package:provider/provider.dart';
 
 class Admin extends StatefulWidget {
   final bool isclick;
-  const Admin({super.key, this.isclick = false});
+  const Admin({super.key, this.isclick = true});
 
   @override
   State<Admin> createState() => _AdminState();
@@ -197,6 +198,20 @@ class _AdminState extends State<Admin> with TickerProviderStateMixin {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => Info(authProvider.userId),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildHeaderButton(
+                            icon: Icons.person_outline_rounded,
+                            label: "User List",
+                            color: const Color(0xFF1B5E20),
+                            textColor: Colors.white,
+                            iconColor: Colors.white,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UserListPage(),
                               ),
                             ),
                           ),
@@ -550,8 +565,9 @@ class _AdminState extends State<Admin> with TickerProviderStateMixin {
   }
 
   void flyToCart(GlobalKey itemKey, String imagePath) {
-    if (itemKey.currentContext == null || cartKey.currentContext == null)
+    if (itemKey.currentContext == null || cartKey.currentContext == null) {
       return;
+    }
     final itemBox = itemKey.currentContext!.findRenderObject() as RenderBox;
     final itemPos = itemBox.localToGlobal(Offset.zero);
     final cartBox = cartKey.currentContext!.findRenderObject() as RenderBox;
@@ -561,8 +577,9 @@ class _AdminState extends State<Admin> with TickerProviderStateMixin {
   }
 
   void flyFromCart(GlobalKey itemKey, String imagePath) {
-    if (itemKey.currentContext == null || cartKey.currentContext == null)
+    if (itemKey.currentContext == null || cartKey.currentContext == null) {
       return;
+    }
     final itemBox = itemKey.currentContext!.findRenderObject() as RenderBox;
     final itemPos = itemBox.localToGlobal(Offset.zero);
     final cartBox = cartKey.currentContext!.findRenderObject() as RenderBox;

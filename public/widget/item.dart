@@ -132,7 +132,10 @@ class _ImageCounterCardState extends State<ImageCounterCard>
               _onTap();
 
               if (!wasSelected) {
-                final String? userId = await dataProvider.readSecureData('userId');
+                // Fix: Await the userId retrieval and use the correct key 'userId'
+                final String? userId = await dataProvider.readSecureData(
+                  'userId',
+                );
                 await cartProvider.postitem(userId, productId, 1);
               } else {
                 final int? invoiceId = cartProvider.getInvoiceId(productId);
@@ -198,67 +201,34 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                               ),
                             ),
                           ),
-                        if (discount > 0)
-                          Positioned(
-                            top: 8,
-                            left: 8,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 7,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    "-$discount%",
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                    ),
+                        ...[
+                          if (widget.isclick == true)
+                            InkWell(
+                              //here
+                              onTap: () async {
+                                await productProvider.deleteProduct(productId);
+                                widget.onSelect2();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 7,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  "Remove",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
-                                const SizedBox(width: 100),
-                                ...[
-                                  if (widget.isclick == true)
-                                    InkWell(
-                                      //here
-                                      onTap: () async {
-                                        await productProvider.deleteProduct(
-                                          productId,
-                                        );
-                                        widget.onSelect2();
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 7,
-                                          vertical: 3,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.red,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: const Text(
-                                          "Remove",
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ],
+                              ),
                             ),
-                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -304,6 +274,7 @@ class _ImageCounterCardState extends State<ImageCounterCard>
                                 color: const Color(0xFF1B5E20),
                               ),
                             ),
+                            //here
                             if (discount > 0) ...[
                               const SizedBox(width: 5),
                               Text(

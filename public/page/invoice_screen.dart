@@ -74,7 +74,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F8F1),
       appBar: AppBar(
-        automaticallyImplyLeading: widget.showHomeButton ? true : false,
+        automaticallyImplyLeading: widget.showHomeButton ? false : true,
         title: const Text('Invoice'),
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
@@ -156,7 +156,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                           ),
                         ),
                         child: Text(
-                          isPurchased ? 'PURCHASED' : 'PENDING',
+                          isPurchased ? 'PURCHASED' : 'NOT YET PURCHASED',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
