@@ -37,7 +37,7 @@ CREATE TABLE `infos` (
   UNIQUE KEY `EMAIL_UNIQUE` (`email`),
   KEY `FK$POSTION_idx` (`position`),
   CONSTRAINT `FK$POSTION` FOREIGN KEY (`position`) REFERENCES `positions` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -46,7 +46,7 @@ CREATE TABLE `infos` (
 
 LOCK TABLES `infos` WRITE;
 /*!40000 ALTER TABLE `infos` DISABLE KEYS */;
-INSERT INTO `infos` VALUES (13,'Nuth','PP',96,'phanuth@gmail.com',0,1,'https://res.cloudinary.com/dregfwrgo/image/upload/v1781762778/uploads/xfbt8ye2qxkkfcjauxvx.png'),(14,'Pha','PP',96,'Nuth@gmail.com',541,3,'https://res.cloudinary.com/dregfwrgo/image/upload/v1781766112/uploads/phzxsz2tp7sedxxri12p.png');
+INSERT INTO `infos` VALUES (13,'Nuth','PP',96,'phanuth@gmail.com',0,1,'https://res.cloudinary.com/dregfwrgo/image/upload/v1781762778/uploads/xfbt8ye2qxkkfcjauxvx.png'),(14,'Pha','PP',96,'Nuth@gmail.com',20,1,'https://res.cloudinary.com/dregfwrgo/image/upload/v1781766112/uploads/phzxsz2tp7sedxxri12p.png'),(15,'Nuth','PP',969813624,'phanuth25102004@gmail.com',200,2,'https://res.cloudinary.com/dregfwrgo/image/upload/v1783391474/uploads/wablvwrghyk9zuchjhz5.jpg');
 /*!40000 ALTER TABLE `infos` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -92,12 +92,14 @@ CREATE TABLE `invoices` (
   `point` decimal(5,2) DEFAULT NULL,
   `total` decimal(5,2) DEFAULT NULL,
   `datetime` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `ispurchase` tinyint NOT NULL DEFAULT '0',
+  `invoiceid` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FK$PRODUCT_idx` (`product`),
   KEY `idx_userid` (`userid`),
   CONSTRAINT `FK$INFOS` FOREIGN KEY (`userid`) REFERENCES `infos` (`id`),
   CONSTRAINT `FK$PRODUCT` FOREIGN KEY (`product`) REFERENCES `products` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=117 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -106,7 +108,6 @@ CREATE TABLE `invoices` (
 
 LOCK TABLES `invoices` WRITE;
 /*!40000 ALTER TABLE `invoices` DISABLE KEYS */;
-INSERT INTO `invoices` VALUES (31,14,1,1,41.60,43.95,'2026-06-19 04:20:01'),(32,14,2,1,24.90,29.59,'2026-06-19 04:20:09'),(33,14,4,1,23.95,25.86,'2026-06-19 04:53:57');
 /*!40000 ALTER TABLE `invoices` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -119,8 +120,10 @@ DROP TABLE IF EXISTS `invview`;
 SET @saved_cs_client     = @@character_set_client;
 /*!50503 SET character_set_client = utf8mb4 */;
 /*!50001 CREATE VIEW `invview` AS SELECT 
+ 1 AS `id`,
  1 AS `name`,
  1 AS `product`,
+ 1 AS `userid`,
  1 AS `quantity`,
  1 AS `point`,
  1 AS `total`*/;
@@ -167,7 +170,7 @@ CREATE TABLE `products` (
   `point` decimal(10,2) DEFAULT NULL,
   `image_url` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -176,8 +179,40 @@ CREATE TABLE `products` (
 
 LOCK TABLES `products` WRITE;
 /*!40000 ALTER TABLE `products` DISABLE KEYS */;
-INSERT INTO `products` VALUES (1,'1457 | អាហារបំប៉នសម្រាប់អត្តពលិក',43.95,41.60,NULL),(2,'1463 | អាហារបំប៉ន ២៤ ស៊ុលភុលសិនៀរ៉ាយ',29.59,24.90,NULL),(3,'1829 | ស៊ុបភីប្រូដាយអ៊ិន ៣០០ក្រាម',21.18,20.45,NULL),(4,'0141 | អាហារសុខភាពសម្រកទម្ងន់ រសជាតិវ៉ានីឡា...',25.86,23.95,NULL),(5,'0142 | អាហារសុខភាពសម្រកទម្ងន់ រសជាតិសូកូឡា...',25.86,23.95,NULL),(6,'0143 | អាហារសុខភាពសម្រកទម្ងន់ រសជាតិស្ត្រប៊ឺរី...',25.86,23.95,NULL);
+INSERT INTO `products` VALUES (1,'1457 | អាហារបំប៉នសម្រាប់អត្តពលិក',43.95,41.60,'https://res.cloudinary.com/dregfwrgo/image/upload/v1783251508/herb3_xnxx9a.png'),(2,'1463 | អាហារបំប៉ន ២៤ ស៊ុលភុលសិនៀរ៉ាយ',29.59,24.90,'https://res.cloudinary.com/dregfwrgo/image/upload/v1783251512/herb4_um5kvl.png'),(3,'1829 | ស៊ុបភីប្រូដាយអ៊ិន ៣០០ក្រាម',21.18,20.45,'https://res.cloudinary.com/dregfwrgo/image/upload/v1783251514/herb5_jzvcdv.png');
 /*!40000 ALTER TABLE `products` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `transaction2`
+--
+
+DROP TABLE IF EXISTS `transaction2`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `transaction2` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `userid` int DEFAULT NULL,
+  `product` int DEFAULT NULL,
+  `quantity` int DEFAULT NULL,
+  `point` decimal(5,2) DEFAULT NULL,
+  `total` decimal(5,2) DEFAULT NULL,
+  `datetime` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `FK$PRODUCT_idx2` (`product`),
+  KEY `idx_userid2` (`userid`),
+  CONSTRAINT `FK$INFOS2` FOREIGN KEY (`userid`) REFERENCES `infos` (`id`),
+  CONSTRAINT `FK$PRODUCT2` FOREIGN KEY (`product`) REFERENCES `products` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `transaction2`
+--
+
+LOCK TABLES `transaction2` WRITE;
+/*!40000 ALTER TABLE `transaction2` DISABLE KEYS */;
+/*!40000 ALTER TABLE `transaction2` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -224,11 +259,12 @@ CREATE TABLE `users` (
   `password` varchar(60) NOT NULL,
   `userids` int NOT NULL,
   `refresh_token` text,
+  `role` enum('member','admin') DEFAULT 'member',
   PRIMARY KEY (`id`),
   UNIQUE KEY `userid_UNIQUE` (`userid`),
   UNIQUE KEY `userids_UNIQUE` (`userids`),
   CONSTRAINT `FK$INFO` FOREIGN KEY (`userids`) REFERENCES `infos` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -237,7 +273,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (6,123,'$2b$12$I9EXs/kNdvFcAPo.cI453O3UeqppV46snRr5Zi8W2G2FzluOSGSL2',14,'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwidXNlcmlkIjoxMjMsImlhdCI6MTc4MTg0Mjc5MSwiZXhwIjoxNzgyNDQ3NTkxfQ.AUFmQ25e_Jxh154L-yL9zCeXeMxOIpFXszmlJJri3DQ');
+INSERT INTO `users` VALUES (6,123,'$2b$12$I9EXs/kNdvFcAPo.cI453O3UeqppV46snRr5Zi8W2G2FzluOSGSL2',14,'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NiwidXNlcmlkIjoxMjMsImlhdCI6MTc4NDM1MjE4OCwiZXhwIjoxNzg0OTU2OTg4fQ.f4eBRW6S-OxK7_D52A0fPaFah43mj2cVdxXcAeRx3E0','admin'),(7,345,'$2b$12$qwOxQnx3cPOWbZ9Uk.shtOvEvTftF7QfufkCBdI6VdQUOc3WluA9.',15,'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywidXNlcmlkIjozNDUsImlhdCI6MTc4MzU3MDEwNywiZXhwIjoxNzg0MTc0OTA3fQ.hCeJScWjg7Aguo7NzVt82AljpounQLM6kcD8q0x_epk','member');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -284,7 +320,7 @@ DELIMITER ;
 /*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `invview` AS select `inf`.`name` AS `name`,`p`.`name` AS `product`,`inv`.`quantity` AS `quantity`,(`inv`.`quantity` * `p`.`point`) AS `point`,(`inv`.`quantity` * `p`.`price`) AS `total` from (((`infos` `inf` join `users` `u` on((`inf`.`id` = `u`.`userids`))) join `invoices` `inv` on((`inv`.`id` = `inf`.`id`))) join `products` `p` on((`p`.`id` = `inv`.`product`))) */;
+/*!50001 VIEW `invview` AS select `inv`.`id` AS `id`,`inf`.`name` AS `name`,`p`.`name` AS `product`,`inv`.`userid` AS `userid`,`inv`.`quantity` AS `quantity`,(`inv`.`quantity` * `p`.`point`) AS `point`,(`inv`.`quantity` * `p`.`price`) AS `total` from (((`infos` `inf` join `users` `u` on((`inf`.`id` = `u`.`userids`))) join `invoices` `inv` on((`inv`.`userid` = `inf`.`id`))) join `products` `p` on((`p`.`id` = `inv`.`product`))) where (`inv`.`ispurchase` = 1) */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -298,4 +334,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-20 11:56:15
+-- Dump completed on 2026-07-23 16:14:14

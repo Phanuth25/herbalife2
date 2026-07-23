@@ -1,0 +1,36 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: herbalife-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: herbalife2
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - herbalife-network
+
+  app:
+    build: .
+    image: herbalife-backend
+    container_name: herbalife-app
+    ports:
+      - "3000:3000"
+    env_file:
+      - private/.env
+    environment:
+      DB_HOST: herbalife-mysql
+      DB_PASSWORD: rootpass
+    depends_on:
+      - mysql
+    networks:
+      - herbalife-network
+
+networks:
+  herbalife-network:
+
+volumes:
+  mysql-data:
