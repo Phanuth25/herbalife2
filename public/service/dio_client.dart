@@ -9,6 +9,9 @@ class DioClient {
       contentType: 'application/json',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
+          headers: {
+      'ngrok-skip-browser-warning': 'true',
+    },
     ),
   )..interceptors.add(
       InterceptorsWrapper(

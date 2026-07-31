@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 // Use 127.0.0.1 for Web to avoid IPv6 issues, and 10.0.2.2 for Android Emulator
-final String accounturl = kIsWeb ? "http://127.0.0.1:3000/api" : "http://10.0.2.2:3000/api";
+final String accounturl = kIsWeb ? "https://pureblood-malformed-buffing.ngrok-free.dev/api" : "https://pureblood-malformed-buffing.ngrok-free.dev/api";
 
 const Color kPrimaryGreen = Color(0xFF2E6A38);
 
