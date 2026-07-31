@@ -3,9 +3,9 @@ import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:project2/herbalife/public/constants/constants.dart';
 import 'package:project2/herbalife/public/model/product_model.dart';
-
+import 'package:project2/herbalife/public/service/dio_client.dart';
 class ProductProvider extends ChangeNotifier {
-  final Dio _dio = Dio();
+  final Dio _dio = DioClient.instance;
 
   List<ProductItemModel> _products = [];
   bool isLoading = false;
